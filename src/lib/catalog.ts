@@ -10,7 +10,7 @@ import {
   publishModZip,
   saveCatalog as saveCatalogToBlob,
 } from "@/lib/store";
-import { sanitizeImagePathname } from "@/lib/ids";
+import { isVersion, sanitizeImagePathname } from "@/lib/ids";
 import type {
   AppRelease,
   Catalog,
@@ -154,6 +154,7 @@ async function loadCatalogFromDb(): Promise<Catalog> {
       sizeBytes: latest.sizeBytes,
       downloadUrl: latest.downloadUrl,
       publishedAt: asIso(latest.publishedAt),
+      downloadCount: mod.downloadCount ?? 0,
       thumbnailUrl,
       images,
       versions: history.map((item) => ({
@@ -579,15 +580,74 @@ export async function getVersion(modId: string, version: string) {
   return row;
 }
 
+export async function resolveModDownload(
+  id: string,
+  version?: string | null,
+  options?: { count?: boolean },
+): Promise<{ downloadUrl: string } | { error: string; status: number }> {
+  if (!hasDatabase()) {
+    const catalog = await loadCatalogFromBlob();
+    const mod = catalog.mods[id];
+    if (!mod) return { error: "Mod not found.", status: 404 };
+    if (!version) return { downloadUrl: mod.downloadUrl };
+    const match = mod.versions.find((entry) => entry.version === version);
+    if (!match) return { error: "Version not found.", status: 404 };
+    return { downloadUrl: match.downloadUrl };
+  }
+
+  await ensureCatalog();
+  const db = getDb();
+  const requested = version?.trim() || "";
+  if (requested && !isVersion(requested)) {
+    return { error: "Invalid version.", status: 400 };
+  }
+
+  const [row] = requested
+    ? await db
+        .select()
+        .from(modVersions)
+        .where(
+          and(
+            eq(modVersions.modId, id),
+            eq(modVersions.version, requested),
+            eq(modVersions.status, "live"),
+          ),
+        )
+        .limit(1)
+    : await db
+        .select()
+        .from(modVersions)
+        .where(and(eq(modVersions.modId, id), eq(modVersions.status, "live")))
+        .orderBy(desc(modVersions.publishedAt))
+        .limit(1);
+
+  if (!row) return { error: requested ? "Version not found." : "Mod not found.", status: 404 };
+
+  if (options?.count !== false) {
+    await db
+      .update(mods)
+      .set({ downloadCount: sql`${mods.downloadCount} + 1` })
+      .where(eq(mods.id, id));
+  }
+  return { downloadUrl: row.downloadUrl };
+}
+
 const SORT_SQL: Record<CatalogSort, string> = {
   name: "name ASC, id ASC",
   newest: '"publishedAt" DESC',
   oldest: '"publishedAt" ASC',
   size: '"sizeBytes" DESC, name ASC',
+  downloads: '"downloadCount" DESC, name ASC',
 };
 
 export function parseCatalogSort(value: string | null | undefined): CatalogSort {
-  if (value === "name" || value === "newest" || value === "oldest" || value === "size") {
+  if (
+    value === "name" ||
+    value === "newest" ||
+    value === "oldest" ||
+    value === "size" ||
+    value === "downloads"
+  ) {
     return value;
   }
   return "newest";
@@ -608,6 +668,7 @@ function asSummary(row: {
   sizeBytes: number | string;
   downloadUrl: string;
   publishedAt: Date | string;
+  downloadCount?: number | string | null;
   thumbnailUrl?: string | null;
 }): PublicModSummary {
   return publicModSummary({
@@ -621,6 +682,7 @@ function asSummary(row: {
     sizeBytes: Number(row.sizeBytes),
     downloadUrl: row.downloadUrl,
     publishedAt: asIso(row.publishedAt),
+    downloadCount: Number(row.downloadCount ?? 0),
     thumbnailUrl: row.thumbnailUrl || undefined,
   });
 }
@@ -643,6 +705,9 @@ function pageFromCatalog(
   }
   mods.sort((a, b) => {
     if (sort === "size") return b.sizeBytes - a.sizeBytes || a.name.localeCompare(b.name);
+    if (sort === "downloads") {
+      return b.downloadCount - a.downloadCount || a.name.localeCompare(b.name);
+    }
     if (sort === "oldest") return a.publishedAt.localeCompare(b.publishedAt);
     if (sort === "newest") return b.publishedAt.localeCompare(a.publishedAt);
     return a.name.localeCompare(b.name);
@@ -695,6 +760,7 @@ export async function queryPublicMods(input: {
         l.size_bytes AS "sizeBytes",
         l.download_url AS "downloadUrl",
         l.published_at AS "publishedAt",
+        COALESCE(m.download_count, 0) AS "downloadCount",
         ti.url AS "thumbnailUrl"
       FROM mods m
       INNER JOIN latest l ON l.mod_id = m.id

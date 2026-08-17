@@ -14,6 +14,7 @@ export const mods = pgTable("mods", {
   description: text("description"),
   ownerUserId: text("owner_user_id"),
   thumbnailImageId: text("thumbnail_image_id"),
+  downloadCount: integer("download_count").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

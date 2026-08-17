@@ -17,6 +17,7 @@ export async function ensureSchema(): Promise<void> {
   `;
   await sql`ALTER TABLE mods ADD COLUMN IF NOT EXISTS description text`;
   await sql`ALTER TABLE mods ADD COLUMN IF NOT EXISTS thumbnail_image_id text`;
+  await sql`ALTER TABLE mods ADD COLUMN IF NOT EXISTS download_count integer NOT NULL DEFAULT 0`;
   await sql`
     CREATE TABLE IF NOT EXISTS mod_images (
       id text PRIMARY KEY,

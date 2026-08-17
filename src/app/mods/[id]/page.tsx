@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadCatalog } from "@/lib/catalog";
-import { formatBytes, formatDate } from "@/lib/format";
+import { formatBytes, formatDate, formatDownloads } from "@/lib/format";
 import { InstallWithManagerButton } from "@/components/install-with-manager";
 import { ModGallery } from "@/components/mod-gallery";
 import { isCatalogId } from "@/lib/ids";
@@ -42,8 +42,8 @@ export default async function ModPage({
               <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
               <h1 className="mt-1 text-3xl font-extrabold">{mod.name}</h1>
               <p className="mt-2 text-sm text-[#9aa3b8]">
-                v{mod.latestVersion} · {formatBytes(mod.sizeBytes)} · Updated{" "}
-                {formatDate(mod.publishedAt)}
+                v{mod.latestVersion} · {formatBytes(mod.sizeBytes)} ·{" "}
+                {formatDownloads(mod.downloadCount)} · Updated {formatDate(mod.publishedAt)}
               </p>
             </div>
           </div>

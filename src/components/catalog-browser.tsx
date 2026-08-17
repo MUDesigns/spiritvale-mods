@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { excerpt, formatBytes, formatDate } from "@/lib/format";
+import { excerpt, formatBytes, formatDownloads, formatDate } from "@/lib/format";
 import type { CatalogSort, PublicModPage } from "@/lib/types";
 import { InstallWithManagerButton } from "@/components/install-with-manager";
 
 const SORTS: { value: CatalogSort; label: string }[] = [
   { value: "newest", label: "Newest" },
+  { value: "downloads", label: "Most downloaded" },
   { value: "name", label: "Name" },
   { value: "oldest", label: "Oldest" },
   { value: "size", label: "Largest" },
@@ -133,10 +134,13 @@ export function CatalogBrowser({ initial }: { initial: PublicModPage }) {
             <thead>
               <tr>
                 <th>Mod</th>
-                <th className="hidden sm:table-cell">Version</th>
-                <th className="hidden md:table-cell">Size</th>
-                <th className="hidden lg:table-cell">Updated</th>
-                <th>Actions</th>
+                <th className="hidden whitespace-nowrap sm:table-cell catalog-col-meta">Version</th>
+                <th className="hidden whitespace-nowrap md:table-cell catalog-col-downloads">
+                  Downloads
+                </th>
+                <th className="hidden whitespace-nowrap md:table-cell catalog-col-meta">Size</th>
+                <th className="hidden whitespace-nowrap lg:table-cell catalog-col-meta">Updated</th>
+                <th className="catalog-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -160,6 +164,9 @@ export function CatalogBrowser({ initial }: { initial: PublicModPage }) {
                           {mod.name}
                         </Link>
                         <p className="mt-0.5 font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
+                        <p className="mt-0.5 text-xs text-[#9aa3b8] md:hidden">
+                          {formatDownloads(mod.downloadCount)}
+                        </p>
                         {mod.description ? (
                           <p className="catalog-mod-excerpt mt-1 text-sm text-[#9aa3b8]">
                             {excerpt(mod.description, 90)}
@@ -169,6 +176,9 @@ export function CatalogBrowser({ initial }: { initial: PublicModPage }) {
                     </div>
                   </td>
                   <td className="hidden whitespace-nowrap sm:table-cell">v{mod.latestVersion}</td>
+                  <td className="hidden whitespace-nowrap md:table-cell">
+                    {formatDownloads(mod.downloadCount)}
+                  </td>
                   <td className="hidden whitespace-nowrap md:table-cell">
                     {formatBytes(mod.sizeBytes)}
                   </td>

@@ -112,7 +112,8 @@ body {
 }
 
 .table-wrap {
-  overflow: hidden;
+  overflow: auto;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: rgba(14, 17, 26, 0.72);
@@ -120,6 +121,7 @@ body {
 
 .catalog-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
@@ -146,8 +148,16 @@ body {
   background: rgba(36, 43, 60, 0.55);
 }
 
+.catalog-col-meta {
+  width: 6.75rem;
+}
+
+.catalog-col-downloads {
+  width: 8.75rem;
+}
+
 .catalog-actions {
-  width: 1%;
+  width: 12.5rem;
   white-space: nowrap;
 }
 
@@ -160,7 +170,7 @@ body {
 }
 
 .catalog-mod-excerpt {
-  max-width: 36rem;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -261,11 +271,22 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.catalog-mod-cell > div {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .mod-thumb {
   width: 40px;
   height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+  box-sizing: border-box;
+  display: block;
   flex-shrink: 0;
   object-fit: cover;
   border: 1px solid var(--line-strong);

@@ -14,6 +14,15 @@ export function formatDate(value: string | Date): string {
   });
 }
 
+export function formatCount(value: number): string {
+  return new Intl.NumberFormat().format(Math.max(0, Math.round(value)));
+}
+
+export function formatDownloads(value: number): string {
+  const count = Math.max(0, Math.round(value));
+  return `${formatCount(count)} ${count === 1 ? "download" : "downloads"}`;
+}
+
 export function versionStatusLabel(status: string): string {
   if (status === "live") return "Live";
   if (status === "scanning") return "Scanning";

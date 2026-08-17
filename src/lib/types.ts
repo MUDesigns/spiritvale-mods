@@ -1,3 +1,5 @@
+import { trackedModDownloadUrl } from "@/lib/downloads";
+
 export type CatalogArtifact = {
   filename: string;
   sha256: string;
@@ -33,6 +35,7 @@ export type CatalogMod = {
   sizeBytes: number;
   downloadUrl: string;
   publishedAt: string;
+  downloadCount?: number;
   thumbnailUrl?: string;
   images?: CatalogModImage[];
   versions: CatalogVersion[];
@@ -49,10 +52,11 @@ export type PublicModSummary = {
   sizeBytes: number;
   downloadUrl: string;
   publishedAt: string;
+  downloadCount: number;
   thumbnailUrl?: string;
 };
 
-export type CatalogSort = "name" | "newest" | "oldest" | "size";
+export type CatalogSort = "name" | "newest" | "oldest" | "size" | "downloads";
 
 export type PublicModPage = {
   mods: PublicModSummary[];
@@ -88,8 +92,9 @@ export function publicModSummary(mod: Pick<CatalogMod, keyof PublicModSummary>):
     filename: mod.filename,
     sha256: mod.sha256,
     sizeBytes: mod.sizeBytes,
-    downloadUrl: mod.downloadUrl,
+    downloadUrl: trackedModDownloadUrl(mod.id),
     publishedAt: mod.publishedAt,
+    downloadCount: mod.downloadCount ?? 0,
     thumbnailUrl: mod.thumbnailUrl,
   };
 }
@@ -97,7 +102,10 @@ export function publicModSummary(mod: Pick<CatalogMod, keyof PublicModSummary>):
 export function publicMod(mod: CatalogMod) {
   return {
     ...publicModSummary(mod),
-    versions: mod.versions,
+    versions: mod.versions.map((entry) => ({
+      ...entry,
+      downloadUrl: trackedModDownloadUrl(mod.id, entry.version),
+    })),
     images: mod.images ?? [],
   };
 }

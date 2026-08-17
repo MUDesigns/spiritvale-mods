@@ -7,7 +7,8 @@ Public catalog for SpiritVale mods and Mod Manager releases. Hosted on Vercel wi
 Unauthenticated:
 
 - `GET /api/catalog` — all live mods + latest app release
-- `GET /api/mods/{id}` — one mod, live version history, screenshots, and thumbnail
+- `GET /api/mods/{id}` — one mod, live version history, screenshots, thumbnail, and download count
+- `GET /api/mods/{id}/download` — increment that mod's download count (all versions share one total) and redirect to the zip
 - `GET /api/app` — latest Mod Manager installer/portable
 
 Authenticated (`Authorization: Bearer $PUBLISH_TOKEN`):
