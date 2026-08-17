@@ -1,4 +1,12 @@
 export const COMMUNITY_MAX_BYTES = 50 * 1024 * 1024;
+export const IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+export const MAX_IMAGES_PER_MOD = 16;
+export const IMAGE_CONTENT_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+] as const;
 export const RATE_LIMIT_MAX = 4;
 export const RATE_LIMIT_WINDOW_MS = 5_000;
 export const API_KEY_PREFIX = "svm_";

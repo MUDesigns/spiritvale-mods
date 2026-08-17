@@ -13,6 +13,7 @@ export const mods = pgTable("mods", {
   name: text("name").notNull(),
   description: text("description"),
   ownerUserId: text("owner_user_id"),
+  thumbnailImageId: text("thumbnail_image_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -20,6 +21,29 @@ export const mods = pgTable("mods", {
     .notNull()
     .defaultNow(),
 });
+
+export const modImages = pgTable(
+  "mod_images",
+  {
+    id: text("id").primaryKey(),
+    modId: text("mod_id")
+      .notNull()
+      .references(() => mods.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    blobPath: text("blob_path").notNull(),
+    filename: text("filename").notNull(),
+    sizeBytes: bigint("size_bytes", { mode: "number" }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    sourceUrl: text("source_url"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("mod_images_mod_id").on(table.modId),
+    uniqueIndex("mod_images_blob_path").on(table.blobPath),
+  ],
+);
 
 export const modVersions = pgTable(
   "mod_versions",

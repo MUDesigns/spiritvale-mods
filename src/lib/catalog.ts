@@ -1,8 +1,8 @@
-import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { getDb, getSql, hasDatabase } from "@/db";
-import { appRelease, mods, modVersions } from "@/db/schema";
+import { appRelease, modImages, mods, modVersions } from "@/db/schema";
 import { ensureSchema } from "@/db/migrate";
-import { MAX_VERSIONS_PER_MOD } from "@/lib/constants";
+import { IMAGE_MAX_BYTES, MAX_IMAGES_PER_MOD, MAX_VERSIONS_PER_MOD } from "@/lib/constants";
 import { isCatalogAdmin } from "@/lib/admin";
 import {
   deleteStoredBlob,
@@ -10,12 +10,15 @@ import {
   publishModZip,
   saveCatalog as saveCatalogToBlob,
 } from "@/lib/store";
+import { sanitizeImagePathname } from "@/lib/ids";
 import type {
   AppRelease,
   Catalog,
   CatalogArtifact,
   CatalogMod,
+  CatalogModImage,
   CatalogSort,
+  ModImageList,
   PublicModPage,
   PublicModSummary,
 } from "@/lib/types";
@@ -107,7 +110,7 @@ async function seedFromBlobIfEmpty(): Promise<void> {
 
 async function loadCatalogFromDb(): Promise<Catalog> {
   const db = getDb();
-  const [modRows, versionRows, appRows] = await Promise.all([
+  const [modRows, versionRows, appRows, imageRows] = await Promise.all([
     db.select().from(mods),
     db
       .select()
@@ -115,6 +118,7 @@ async function loadCatalogFromDb(): Promise<Catalog> {
       .where(eq(modVersions.status, "live"))
       .orderBy(desc(modVersions.publishedAt)),
     db.select().from(appRelease).where(eq(appRelease.id, 1)).limit(1),
+    db.select().from(modImages).orderBy(asc(modImages.sortOrder), asc(modImages.createdAt)),
   ]);
 
   const versionsByMod = new Map<string, typeof versionRows>();
@@ -124,11 +128,21 @@ async function loadCatalogFromDb(): Promise<Catalog> {
     versionsByMod.set(row.modId, list);
   }
 
+  const imagesByMod = new Map<string, CatalogModImage[]>();
+  for (const row of imageRows) {
+    const list = imagesByMod.get(row.modId) ?? [];
+    list.push({ id: row.id, url: row.url, filename: row.filename });
+    imagesByMod.set(row.modId, list);
+  }
+
   const catalogMods: Record<string, CatalogMod> = {};
   for (const mod of modRows) {
     const history = (versionsByMod.get(mod.id) ?? []).slice(0, MAX_VERSIONS_PER_MOD);
     const latest = history[0];
     if (!latest) continue;
+    const images = imagesByMod.get(mod.id) ?? [];
+    const thumbnailUrl =
+      images.find((image) => image.id === mod.thumbnailImageId)?.url ?? images[0]?.url;
     catalogMods[mod.id] = {
       id: mod.id,
       name: mod.name,
@@ -140,6 +154,8 @@ async function loadCatalogFromDb(): Promise<Catalog> {
       sizeBytes: latest.sizeBytes,
       downloadUrl: latest.downloadUrl,
       publishedAt: asIso(latest.publishedAt),
+      thumbnailUrl,
+      images,
       versions: history.map((item) => ({
         version: item.version,
         changelog: item.changelog ?? undefined,
@@ -592,6 +608,7 @@ function asSummary(row: {
   sizeBytes: number | string;
   downloadUrl: string;
   publishedAt: Date | string;
+  thumbnailUrl?: string | null;
 }): PublicModSummary {
   return publicModSummary({
     id: row.id,
@@ -604,6 +621,7 @@ function asSummary(row: {
     sizeBytes: Number(row.sizeBytes),
     downloadUrl: row.downloadUrl,
     publishedAt: asIso(row.publishedAt),
+    thumbnailUrl: row.thumbnailUrl || undefined,
   });
 }
 
@@ -676,9 +694,19 @@ export async function queryPublicMods(input: {
         l.sha256,
         l.size_bytes AS "sizeBytes",
         l.download_url AS "downloadUrl",
-        l.published_at AS "publishedAt"
+        l.published_at AS "publishedAt",
+        ti.url AS "thumbnailUrl"
       FROM mods m
       INNER JOIN latest l ON l.mod_id = m.id
+      LEFT JOIN LATERAL (
+        SELECT url
+        FROM mod_images i
+        WHERE i.mod_id = m.id
+        ORDER BY CASE WHEN i.id = m.thumbnail_image_id THEN 0 ELSE 1 END,
+          i.sort_order ASC,
+          i.created_at ASC
+        LIMIT 1
+      ) ti ON true
       WHERE $1 = '' OR m.name ILIKE $2 OR m.id ILIKE $2 OR COALESCE(m.description, '') ILIKE $2
     )
     SELECT *, COUNT(*) OVER()::int AS total
@@ -709,11 +737,23 @@ export function writeResultResponse(result: OwnedModWriteResult): Response {
   return Response.json({ ok: true });
 }
 
+export function writeImageResult(
+  result: { ok: true; list: ModImageList } | OwnedModWriteResult,
+): Response {
+  if ("error" in result) {
+    return writeResultResponse(result);
+  }
+  if ("list" in result) {
+    return Response.json(result.list);
+  }
+  return writeResultResponse(result);
+}
+
 type OwnedModContext =
   | { ok: true; db: ReturnType<typeof getDb> }
   | { ok: false; error: string; status: number };
 
-async function requireModAccess(id: string, userId: string): Promise<OwnedModContext> {
+export async function requireModAccess(id: string, userId: string): Promise<OwnedModContext> {
   if (!hasDatabase()) {
     return { ok: false, error: "Database is not configured.", status: 503 };
   }
@@ -743,6 +783,208 @@ export async function updateModMeta(
     })
     .where(eq(mods.id, id));
   return { ok: true };
+}
+
+function publicImage(row: { id: string; url: string; filename: string }): CatalogModImage {
+  return { id: row.id, url: row.url, filename: row.filename };
+}
+
+async function imageListFor(
+  db: ReturnType<typeof getDb>,
+  modId: string,
+): Promise<ModImageList> {
+  const [mod] = await db
+    .select({ thumbnailImageId: mods.thumbnailImageId })
+    .from(mods)
+    .where(eq(mods.id, modId))
+    .limit(1);
+  const rows = await db
+    .select()
+    .from(modImages)
+    .where(eq(modImages.modId, modId))
+    .orderBy(asc(modImages.sortOrder), asc(modImages.createdAt));
+  return {
+    thumbnailImageId: mod?.thumbnailImageId ?? null,
+    images: rows.map(publicImage),
+  };
+}
+
+export async function listImagesByModIds(
+  modIds: string[],
+): Promise<Map<string, ModImageList>> {
+  const lists = new Map<string, ModImageList>();
+  if (modIds.length === 0 || !hasDatabase()) return lists;
+  await ensureCatalog();
+  const db = getDb();
+  const uniqueIds = [...new Set(modIds)];
+  const [modRows, imageRows] = await Promise.all([
+    db
+      .select({ id: mods.id, thumbnailImageId: mods.thumbnailImageId })
+      .from(mods)
+      .where(inArray(mods.id, uniqueIds)),
+    db
+      .select()
+      .from(modImages)
+      .where(inArray(modImages.modId, uniqueIds))
+      .orderBy(asc(modImages.sortOrder), asc(modImages.createdAt)),
+  ]);
+  for (const id of uniqueIds) {
+    lists.set(id, { thumbnailImageId: null, images: [] });
+  }
+  for (const mod of modRows) {
+    lists.set(mod.id, { thumbnailImageId: mod.thumbnailImageId ?? null, images: [] });
+  }
+  for (const row of imageRows) {
+    const current = lists.get(row.modId) ?? { thumbnailImageId: null, images: [] };
+    current.images.push(publicImage(row));
+    lists.set(row.modId, current);
+  }
+  return lists;
+}
+
+export async function listModImages(
+  id: string,
+  userId: string,
+): Promise<{ ok: true; list: ModImageList } | OwnedModWriteResult> {
+  const owned = await requireModAccess(id, userId);
+  if (!owned.ok) return owned;
+  return { ok: true, list: await imageListFor(owned.db, id) };
+}
+
+export async function registerModImage(
+  id: string,
+  userId: string,
+  input: {
+    pathname: string;
+    filename: string;
+    sizeBytes: number;
+    url: string;
+    setThumbnail?: boolean;
+    sourceUrl?: string;
+  },
+): Promise<{ ok: true; list: ModImageList } | OwnedModWriteResult> {
+  const owned = await requireModAccess(id, userId);
+  if (!owned.ok) return owned;
+  const pathname = sanitizeImagePathname(input.pathname, id);
+  if (!pathname) {
+    return { error: "Invalid image path.", status: 400 };
+  }
+  if (!Number.isFinite(input.sizeBytes) || input.sizeBytes <= 0 || input.sizeBytes > IMAGE_MAX_BYTES) {
+    return {
+      error: `Images must be ${IMAGE_MAX_BYTES / (1024 * 1024)} MB or smaller.`,
+      status: 400,
+    };
+  }
+  const url = input.url.trim();
+  if (!url.startsWith("https://")) {
+    return { error: "A public image URL is required.", status: 400 };
+  }
+
+  const existing = await owned.db
+    .select()
+    .from(modImages)
+    .where(eq(modImages.blobPath, pathname))
+    .limit(1);
+  if (existing[0]) {
+    if (input.setThumbnail) {
+      await owned.db
+        .update(mods)
+        .set({ thumbnailImageId: existing[0].id, updatedAt: new Date() })
+        .where(eq(mods.id, id));
+    }
+    return { ok: true, list: await imageListFor(owned.db, id) };
+  }
+
+  const current = await owned.db
+    .select({ id: modImages.id })
+    .from(modImages)
+    .where(eq(modImages.modId, id));
+  if (current.length >= MAX_IMAGES_PER_MOD) {
+    return { error: `A mod can have at most ${MAX_IMAGES_PER_MOD} screenshots.`, status: 400 };
+  }
+
+  const imageId = pathname.split("/")[3] ?? crypto.randomUUID();
+  await owned.db.insert(modImages).values({
+    id: imageId,
+    modId: id,
+    url,
+    blobPath: pathname,
+    filename: input.filename.trim() || pathname.split("/").pop() || "screenshot.png",
+    sizeBytes: Math.round(input.sizeBytes),
+    sortOrder: current.length,
+    sourceUrl: input.sourceUrl?.trim() || null,
+  });
+
+  const [mod] = await owned.db
+    .select({ thumbnailImageId: mods.thumbnailImageId })
+    .from(mods)
+    .where(eq(mods.id, id))
+    .limit(1);
+  if (input.setThumbnail || !mod?.thumbnailImageId) {
+    await owned.db
+      .update(mods)
+      .set({ thumbnailImageId: imageId, updatedAt: new Date() })
+      .where(eq(mods.id, id));
+  } else {
+    await owned.db.update(mods).set({ updatedAt: new Date() }).where(eq(mods.id, id));
+  }
+  return { ok: true, list: await imageListFor(owned.db, id) };
+}
+
+export async function setModThumbnail(
+  id: string,
+  userId: string,
+  imageId: string,
+): Promise<{ ok: true; list: ModImageList } | OwnedModWriteResult> {
+  const owned = await requireModAccess(id, userId);
+  if (!owned.ok) return owned;
+  const [row] = await owned.db
+    .select()
+    .from(modImages)
+    .where(and(eq(modImages.id, imageId), eq(modImages.modId, id)))
+    .limit(1);
+  if (!row) return { error: "Image not found.", status: 404 };
+  await owned.db
+    .update(mods)
+    .set({ thumbnailImageId: imageId, updatedAt: new Date() })
+    .where(eq(mods.id, id));
+  return { ok: true, list: await imageListFor(owned.db, id) };
+}
+
+export async function deleteModImage(
+  id: string,
+  userId: string,
+  imageId: string,
+): Promise<{ ok: true; list: ModImageList } | OwnedModWriteResult> {
+  const owned = await requireModAccess(id, userId);
+  if (!owned.ok) return owned;
+  const [row] = await owned.db
+    .select()
+    .from(modImages)
+    .where(and(eq(modImages.id, imageId), eq(modImages.modId, id)))
+    .limit(1);
+  if (!row) return { error: "Image not found.", status: 404 };
+  await owned.db.delete(modImages).where(eq(modImages.id, imageId));
+  const remaining = await owned.db
+    .select()
+    .from(modImages)
+    .where(eq(modImages.modId, id))
+    .orderBy(asc(modImages.sortOrder), asc(modImages.createdAt));
+  const [mod] = await owned.db
+    .select({ thumbnailImageId: mods.thumbnailImageId })
+    .from(mods)
+    .where(eq(mods.id, id))
+    .limit(1);
+  const nextThumb =
+    mod?.thumbnailImageId && remaining.some((item) => item.id === mod.thumbnailImageId)
+      ? mod.thumbnailImageId
+      : (remaining[0]?.id ?? null);
+  await owned.db
+    .update(mods)
+    .set({ thumbnailImageId: nextThumb, updatedAt: new Date() })
+    .where(eq(mods.id, id));
+  await deleteStoredBlob(row.blobPath);
+  return { ok: true, list: await imageListFor(owned.db, id) };
 }
 
 export async function deleteOwnedModVersion(
@@ -778,12 +1020,15 @@ export async function deleteOwnedMod(
   const owned = await requireModAccess(id, userId);
   if (!owned.ok) return owned;
 
-  const rows = await owned.db
-    .select()
-    .from(modVersions)
-    .where(eq(modVersions.modId, id));
+  const [versionRows, imageRows] = await Promise.all([
+    owned.db.select().from(modVersions).where(eq(modVersions.modId, id)),
+    owned.db.select().from(modImages).where(eq(modImages.modId, id)),
+  ]);
   await owned.db.delete(mods).where(eq(mods.id, id));
-  await Promise.all(rows.map((row) => deleteStoredBlob(row.blobPath)));
+  await Promise.all([
+    ...versionRows.map((row) => deleteStoredBlob(row.blobPath)),
+    ...imageRows.map((row) => deleteStoredBlob(row.blobPath)),
+  ]);
   return { ok: true };
 }
 

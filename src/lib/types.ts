@@ -11,6 +11,17 @@ export type CatalogVersion = CatalogArtifact & {
   publishedAt: string;
 };
 
+export type CatalogModImage = {
+  id: string;
+  url: string;
+  filename: string;
+};
+
+export type ModImageList = {
+  thumbnailImageId: string | null;
+  images: CatalogModImage[];
+};
+
 export type CatalogMod = {
   id: string;
   name: string;
@@ -22,6 +33,8 @@ export type CatalogMod = {
   sizeBytes: number;
   downloadUrl: string;
   publishedAt: string;
+  thumbnailUrl?: string;
+  images?: CatalogModImage[];
   versions: CatalogVersion[];
 };
 
@@ -36,6 +49,7 @@ export type PublicModSummary = {
   sizeBytes: number;
   downloadUrl: string;
   publishedAt: string;
+  thumbnailUrl?: string;
 };
 
 export type CatalogSort = "name" | "newest" | "oldest" | "size";
@@ -76,6 +90,7 @@ export function publicModSummary(mod: Pick<CatalogMod, keyof PublicModSummary>):
     sizeBytes: mod.sizeBytes,
     downloadUrl: mod.downloadUrl,
     publishedAt: mod.publishedAt,
+    thumbnailUrl: mod.thumbnailUrl,
   };
 }
 
@@ -83,5 +98,6 @@ export function publicMod(mod: CatalogMod) {
   return {
     ...publicModSummary(mod),
     versions: mod.versions,
+    images: mod.images ?? [],
   };
 }

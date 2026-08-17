@@ -143,15 +143,30 @@ export function CatalogBrowser({ initial }: { initial: PublicModPage }) {
               {data.mods.map((mod) => (
                 <tr key={mod.id} className="catalog-row">
                   <td>
-                    <Link href={`/mods/${mod.id}`} className="font-extrabold hover:text-[#55b7ea]">
-                      {mod.name}
-                    </Link>
-                    <p className="mt-0.5 font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
-                    {mod.description ? (
-                      <p className="catalog-mod-excerpt mt-1 text-sm text-[#9aa3b8]">
-                        {excerpt(mod.description, 90)}
-                      </p>
-                    ) : null}
+                    <div className="catalog-mod-cell">
+                      {mod.thumbnailUrl ? (
+                        <img
+                          className="mod-thumb"
+                          src={mod.thumbnailUrl}
+                          alt=""
+                          width={40}
+                          height={40}
+                        />
+                      ) : (
+                        <span className="mod-thumb mod-thumb-empty" aria-hidden />
+                      )}
+                      <div className="min-w-0">
+                        <Link href={`/mods/${mod.id}`} className="font-extrabold hover:text-[#55b7ea]">
+                          {mod.name}
+                        </Link>
+                        <p className="mt-0.5 font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
+                        {mod.description ? (
+                          <p className="catalog-mod-excerpt mt-1 text-sm text-[#9aa3b8]">
+                            {excerpt(mod.description, 90)}
+                          </p>
+                        ) : null}
+                      </div>
+                    </div>
                   </td>
                   <td className="hidden whitespace-nowrap sm:table-cell">v{mod.latestVersion}</td>
                   <td className="hidden whitespace-nowrap md:table-cell">

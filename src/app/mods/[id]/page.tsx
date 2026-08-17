@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { loadCatalog } from "@/lib/catalog";
 import { formatBytes, formatDate } from "@/lib/format";
 import { InstallWithManagerButton } from "@/components/install-with-manager";
+import { ModGallery } from "@/components/mod-gallery";
 import { isCatalogId } from "@/lib/ids";
 import { publicMod } from "@/lib/types";
 
@@ -27,13 +28,24 @@ export default async function ModPage({
       </Link>
       <section className="panel p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-          <div className="min-w-0">
-            <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
-            <h1 className="mt-1 text-3xl font-extrabold">{mod.name}</h1>
-            <p className="mt-2 text-sm text-[#9aa3b8]">
-              v{mod.latestVersion} · {formatBytes(mod.sizeBytes)} · Updated{" "}
-              {formatDate(mod.publishedAt)}
-            </p>
+          <div className="flex min-w-0 items-start gap-3">
+            {mod.thumbnailUrl ? (
+              <img
+                className="mod-thumb mod-thumb-lg"
+                src={mod.thumbnailUrl}
+                alt=""
+                width={72}
+                height={72}
+              />
+            ) : null}
+            <div className="min-w-0">
+              <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
+              <h1 className="mt-1 text-3xl font-extrabold">{mod.name}</h1>
+              <p className="mt-2 text-sm text-[#9aa3b8]">
+                v{mod.latestVersion} · {formatBytes(mod.sizeBytes)} · Updated{" "}
+                {formatDate(mod.publishedAt)}
+              </p>
+            </div>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
             <InstallWithManagerButton id={mod.id} />
@@ -57,6 +69,7 @@ export default async function ModPage({
           . Your browser will ask to open the app, then the zip is added to your
           library.
         </p>
+        <ModGallery images={mod.images} name={mod.name} />
       </section>
 
       <section className="flex flex-col gap-3">

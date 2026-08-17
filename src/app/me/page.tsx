@@ -1,9 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ModImagesPanel } from "@/components/mod-images-panel";
 import { ModMetaForm } from "@/components/mod-meta-form";
 import { DeleteModButton, DeleteVersionButton } from "@/components/mod-owner-controls";
-import { hasDatabase, listUserMods } from "@/lib/catalog";
+import { hasDatabase, listImagesByModIds, listUserMods } from "@/lib/catalog";
 import {
   formatBytes,
   formatDate,
@@ -25,6 +26,7 @@ export default async function MePage() {
   }
 
   const { owned, versions } = await listUserMods(userId);
+  const imagesByMod = await listImagesByModIds(owned.map((mod) => mod.id));
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
@@ -33,7 +35,8 @@ export default async function MePage() {
         <p className="mt-2 text-sm text-[#9aa3b8]">
           Live files appear on the public catalog. Scanning and quarantined
           uploads are only visible here. You can edit the Nexus-style
-          description, remove an older file, or delete a listing you uploaded.
+          description, remove an older file, delete a listing you uploaded, or
+          add screenshots and pick a thumbnail.
         </p>
       </div>
 
@@ -44,17 +47,29 @@ export default async function MePage() {
       {owned.map((mod) => {
         const rows = versions.filter((row) => row.modId === mod.id);
         const latestLive = rows.find((row) => row.status === "live")?.version;
+        const imageList = imagesByMod.get(mod.id) ?? {
+          thumbnailImageId: null,
+          images: [],
+        };
+        const thumbUrl =
+          imageList.images.find((image) => image.id === imageList.thumbnailImageId)?.url ??
+          imageList.images[0]?.url;
         return (
           <section key={mod.id} className="panel p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <Link
-                  href={`/mods/${mod.id}`}
-                  className="text-xl font-extrabold hover:text-[#55b7ea]"
-                >
-                  {mod.name}
-                </Link>
-                <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
+              <div className="flex min-w-0 items-start gap-3">
+                {thumbUrl ? (
+                  <img className="mod-thumb" src={thumbUrl} alt="" width={40} height={40} />
+                ) : null}
+                <div>
+                  <Link
+                    href={`/mods/${mod.id}`}
+                    className="text-xl font-extrabold hover:text-[#55b7ea]"
+                  >
+                    {mod.name}
+                  </Link>
+                  <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Link href="/upload" className="btn btn-secondary">
@@ -68,6 +83,7 @@ export default async function MePage() {
               name={mod.name}
               description={mod.description ?? ""}
             />
+            <ModImagesPanel id={mod.id} initial={imageList} />
             {rows.length > 0 ? (
               <ul className="mt-5 flex flex-col gap-3">
                 {rows.map((row) => (

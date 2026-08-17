@@ -16,6 +16,22 @@ export async function ensureSchema(): Promise<void> {
     )
   `;
   await sql`ALTER TABLE mods ADD COLUMN IF NOT EXISTS description text`;
+  await sql`ALTER TABLE mods ADD COLUMN IF NOT EXISTS thumbnail_image_id text`;
+  await sql`
+    CREATE TABLE IF NOT EXISTS mod_images (
+      id text PRIMARY KEY,
+      mod_id text NOT NULL REFERENCES mods(id) ON DELETE CASCADE,
+      url text NOT NULL,
+      blob_path text NOT NULL,
+      filename text NOT NULL,
+      size_bytes bigint NOT NULL,
+      sort_order integer NOT NULL DEFAULT 0,
+      source_url text,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `;
+  await sql`CREATE INDEX IF NOT EXISTS mod_images_mod_id ON mod_images (mod_id)`;
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS mod_images_blob_path ON mod_images (blob_path)`;
   await sql`
     CREATE TABLE IF NOT EXISTS mod_versions (
       id integer PRIMARY KEY GENERATED ALWAYS AS IDENTITY,

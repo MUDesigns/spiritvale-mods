@@ -7,7 +7,7 @@ Public catalog for SpiritVale mods and Mod Manager releases. Hosted on Vercel wi
 Unauthenticated:
 
 - `GET /api/catalog` — all live mods + latest app release
-- `GET /api/mods/{id}` — one mod and live version history
+- `GET /api/mods/{id}` — one mod, live version history, screenshots, and thumbnail
 - `GET /api/app` — latest Mod Manager installer/portable
 
 Authenticated (`Authorization: Bearer $PUBLISH_TOKEN`):
@@ -26,6 +26,9 @@ Community (Clerk session or user API key):
 - `POST /api/v1/mods` — register the uploaded zip; queued for VirusTotal and live after a clean scan
 - `POST /api/community/upload-token` — browser Blob client token
 - `POST /api/community/publish` — same scan queue as `/api/v1/mods`
+- `POST /api/community/image-upload-token` — browser Blob client token for a screenshot
+- `GET`/`POST`/`PATCH /api/community/mods/{id}/images` — list, register, or set the thumbnail
+- `DELETE /api/community/mods/{id}/images/{imageId}` — remove a screenshot
 - `DELETE /api/community/mods/{id}` — session: delete a listing you own
 - `DELETE /api/community/mods/{id}/versions/{version}` — session: delete one uploaded file
 
@@ -60,3 +63,13 @@ In the Clerk dashboard enable Email/password, Google, and Discord. Add `https://
 npm install
 npm run dev
 ```
+
+Owners add screenshots from `/me` (admins can also do this on `/admin`). Uploads are PNG, JPEG, WebP, or GIF, 8 MB each, 16 per mod. One image can be the thumbnail shown next to the title in the catalog.
+
+To copy existing images from mapped Nexus listings into Blob + Postgres:
+
+```bash
+node scripts/sync-nexus-images.mjs
+```
+
+Uses the same `%APPDATA%/com.matt0.spiritvale-mod-publisher/nexus-map.json` as `scripts/sync-nexus-descriptions.mjs`. Mods that already have screenshots are left alone unless you pass `--force`.
