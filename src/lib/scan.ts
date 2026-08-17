@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
-import { del, get } from "@vercel/blob";
+import { del } from "@vercel/blob";
 import { clerkClient } from "@clerk/nextjs/server";
 import { getVersion, markVersionStatus } from "@/lib/catalog";
 import { sendQuarantineAlert } from "@/lib/mail";
-import { publishModZip } from "@/lib/store";
+import { publishModZip, readStoredBlob } from "@/lib/store";
 import { inspectZipBuffer } from "@/lib/zip";
 
 const VT_BASE = "https://www.virustotal.com/api/v3";
@@ -112,21 +112,6 @@ async function uploaderEmail(userId: string): Promise<string | null> {
   }
 }
 
-async function readBlobBuffer(pathname: string): Promise<Buffer> {
-  const result = await get(pathname, { access: "private", useCache: false });
-  if (!result?.stream) {
-    throw new Error("Quarantine blob was not found.");
-  }
-  const chunks: Buffer[] = [];
-  const reader = result.stream.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(Buffer.from(value));
-  }
-  return Buffer.concat(chunks);
-}
-
 export async function scanVersion(modId: string, version: string): Promise<void> {
   const row = await getVersion(modId, version);
   if (!row) return;
@@ -158,7 +143,7 @@ export async function scanVersion(modId: string, version: string): Promise<void>
   };
 
   try {
-    const buffer = await readBlobBuffer(row.blobPath);
+    const buffer = await readStoredBlob(row.blobPath, row.downloadUrl);
     const sha256 = createHash("sha256").update(buffer).digest("hex");
     if (sha256 !== row.sha256.toLowerCase()) {
       await quarantine(`SHA-256 mismatch (computed ${sha256}).`);

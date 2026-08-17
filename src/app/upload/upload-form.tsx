@@ -51,7 +51,7 @@ export function UploadForm() {
       const sha256 = await sha256File(file);
       const pathname = `quarantine/${user.id}/${crypto.randomUUID()}/${file.name}`;
       const blob = await upload(pathname, file, {
-        access: "private",
+        access: "public",
         handleUploadUrl: "/api/community/upload-token",
         clientPayload: JSON.stringify({ id, version }),
       });

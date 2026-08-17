@@ -155,3 +155,46 @@ export function ApproveVersionButton({
     </div>
   );
 }
+
+export function RetryScanButton({
+  id,
+  version,
+}: {
+  id: string;
+  version: string;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onRetry() {
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `/api/community/mods/${id}/versions/${encodeURIComponent(version)}/rescan`,
+        { method: "POST" },
+      );
+      const json = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(json.error ?? "Could not retry scan.");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not retry scan.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        className="btn btn-secondary"
+        disabled={busy}
+        onClick={() => void onRetry()}
+      >
+        {busy ? "Queueing…" : "Retry scan"}
+      </button>
+      {error ? <p className="text-xs text-[#e07a6d]">{error}</p> : null}
+    </div>
+  );
+}

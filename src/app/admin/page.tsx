@@ -8,6 +8,7 @@ import {
   ApproveVersionButton,
   DeleteModButton,
   DeleteVersionButton,
+  RetryScanButton,
 } from "@/components/mod-owner-controls";
 import { hasDatabase, listAdminCatalog } from "@/lib/catalog";
 import {
@@ -103,6 +104,7 @@ export default async function AdminPage() {
                         filename={row.filename}
                         scanSummary={row.scanSummary}
                       />
+                      <RetryScanButton id={row.modId} version={row.version} />
                       <DeleteVersionButton
                         id={row.modId}
                         version={row.version}
@@ -167,12 +169,15 @@ export default async function AdminPage() {
                         </div>
                         <div className="flex flex-wrap items-start gap-2">
                           {row.status === "quarantined" || row.status === "scanning" ? (
-                            <ApproveVersionButton
-                              id={mod.id}
-                              version={row.version}
-                              filename={row.filename}
-                              scanSummary={row.scanSummary}
-                            />
+                            <>
+                              <ApproveVersionButton
+                                id={mod.id}
+                                version={row.version}
+                                filename={row.filename}
+                                scanSummary={row.scanSummary}
+                              />
+                              <RetryScanButton id={mod.id} version={row.version} />
+                            </>
                           ) : null}
                           <DeleteVersionButton
                             id={mod.id}

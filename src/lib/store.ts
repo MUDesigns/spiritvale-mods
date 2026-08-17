@@ -1,4 +1,4 @@
-import { copy, del, list, put } from "@vercel/blob";
+import { copy, del, get, list, put } from "@vercel/blob";
 import { emptyCatalog, type Catalog } from "./types";
 
 const CATALOG_PATH = "catalog.json";
@@ -51,4 +51,63 @@ export async function publishModZip(sourcePath: string, publicPath: string) {
     allowOverwrite: true,
     contentType: "application/zip",
   });
+}
+
+async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  const reader = stream.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks);
+}
+
+function blobAccessFromUrl(url: string): "public" | "private" {
+  return url.includes(".private.blob.vercel-storage.com") ? "private" : "public";
+}
+
+export async function readStoredBlob(
+  pathname: string,
+  downloadUrl?: string | null,
+): Promise<Buffer> {
+  const attempts: Array<{ urlOrPath: string; access: "public" | "private" }> = [];
+  if (downloadUrl?.startsWith("http")) {
+    attempts.push({ urlOrPath: downloadUrl, access: blobAccessFromUrl(downloadUrl) });
+  }
+  attempts.push({ urlOrPath: pathname, access: "public" });
+  attempts.push({ urlOrPath: pathname, access: "private" });
+
+  const seen = new Set<string>();
+  let lastError: unknown;
+  for (const attempt of attempts) {
+    const key = `${attempt.access}:${attempt.urlOrPath}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    try {
+      if (attempt.access === "public" && attempt.urlOrPath.startsWith("http")) {
+        const response = await fetch(attempt.urlOrPath);
+        if (response.ok) {
+          return Buffer.from(await response.arrayBuffer());
+        }
+        lastError = new Error(`HTTP ${response.status} ${response.statusText}`);
+        continue;
+      }
+      const result = await get(attempt.urlOrPath, {
+        access: attempt.access,
+        ...(attempt.access === "private" ? { useCache: false } : {}),
+      });
+      if (!result?.stream) {
+        lastError = new Error("Quarantine blob was not found.");
+        continue;
+      }
+      return await streamToBuffer(result.stream);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Quarantine blob was not found.");
 }
