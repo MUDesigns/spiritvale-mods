@@ -14,6 +14,7 @@ export type CatalogVersion = CatalogArtifact & {
 export type CatalogMod = {
   id: string;
   name: string;
+  description?: string;
   latestVersion: string;
   changelog?: string;
   filename: string;
@@ -22,6 +23,28 @@ export type CatalogMod = {
   downloadUrl: string;
   publishedAt: string;
   versions: CatalogVersion[];
+};
+
+export type PublicModSummary = {
+  id: string;
+  name: string;
+  description: string;
+  latestVersion: string;
+  changelog: string;
+  filename: string;
+  sha256: string;
+  sizeBytes: number;
+  downloadUrl: string;
+  publishedAt: string;
+};
+
+export type CatalogSort = "name" | "newest" | "oldest" | "size";
+
+export type PublicModPage = {
+  mods: PublicModSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
 };
 
 export type AppRelease = {
@@ -41,10 +64,11 @@ export function emptyCatalog(): Catalog {
   return { mods: {}, app: null };
 }
 
-export function publicMod(mod: CatalogMod) {
+export function publicModSummary(mod: Pick<CatalogMod, keyof PublicModSummary>): PublicModSummary {
   return {
     id: mod.id,
     name: mod.name,
+    description: mod.description ?? "",
     latestVersion: mod.latestVersion,
     changelog: mod.changelog ?? "",
     filename: mod.filename,
@@ -52,6 +76,12 @@ export function publicMod(mod: CatalogMod) {
     sizeBytes: mod.sizeBytes,
     downloadUrl: mod.downloadUrl,
     publishedAt: mod.publishedAt,
+  };
+}
+
+export function publicMod(mod: CatalogMod) {
+  return {
+    ...publicModSummary(mod),
     versions: mod.versions,
   };
 }

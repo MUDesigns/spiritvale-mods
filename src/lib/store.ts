@@ -1,9 +1,9 @@
-import { list, put } from "@vercel/blob";
+import { copy, del, list, put } from "@vercel/blob";
 import { emptyCatalog, type Catalog } from "./types";
 
 const CATALOG_PATH = "catalog.json";
 
-export async function loadCatalog(): Promise<Catalog> {
+export async function loadCatalogFromBlob(): Promise<Catalog> {
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return emptyCatalog();
   }
@@ -31,6 +31,24 @@ export async function saveCatalog(catalog: Catalog): Promise<void> {
     addRandomSuffix: false,
     allowOverwrite: true,
     contentType: "application/json",
-    cacheControlMaxAge: 60,
+    cacheControlMaxAge: 0,
+  });
+}
+
+export async function deleteStoredBlob(pathname: string): Promise<void> {
+  if (!process.env.BLOB_READ_WRITE_TOKEN || !pathname) return;
+  try {
+    await del(pathname);
+  } catch {
+    // Blob may already be gone (quarantine copy cleaned after scan).
+  }
+}
+
+export async function publishModZip(sourcePath: string, publicPath: string) {
+  return copy(sourcePath, publicPath, {
+    access: "public",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    contentType: "application/zip",
   });
 }

@@ -1,4 +1,4 @@
-import { loadCatalog } from "@/lib/store";
+import { loadCatalog } from "@/lib/catalog";
 import { publicMod } from "@/lib/types";
 
 export const dynamic = "force-dynamic";

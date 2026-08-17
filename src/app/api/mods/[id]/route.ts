@@ -1,4 +1,4 @@
-import { loadCatalog } from "@/lib/store";
+import { loadCatalog } from "@/lib/catalog";
 import { isCatalogId } from "@/lib/ids";
 import { publicMod } from "@/lib/types";
 
