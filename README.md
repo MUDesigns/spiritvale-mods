@@ -29,6 +29,8 @@ Community (Clerk session or user API key):
 - `DELETE /api/community/mods/{id}` — session: delete a listing you own
 - `DELETE /api/community/mods/{id}/versions/{version}` — session: delete one uploaded file
 
+Community upload endpoints allow 4 requests per 5 seconds per account. There is no hourly upload cap.
+
 Catalog admin (`matt03803@gmail.com`, plus emails granted at `/admin`, `ADMIN_EMAILS`, and `ADMIN_ALERT_EMAIL`):
 
 - `/admin` — review quarantined/scanning uploads, approve them onto the catalog, edit and delete any listing, and grant admin to other accounts

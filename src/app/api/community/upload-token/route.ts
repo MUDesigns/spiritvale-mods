@@ -5,6 +5,7 @@ import { unauthorized } from "@/lib/auth";
 import { hasClerk } from "@/lib/clerk";
 import { getModOwner, hasDatabase } from "@/lib/catalog";
 import { isCatalogId, isVersion, isZipFilename, sanitizeQuarantinePathname } from "@/lib/ids";
+import { consumeUserRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,15 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as HandleUploadBody;
+  if (
+    typeof body === "object" &&
+    body &&
+    "type" in body &&
+    body.type === "blob.generate-client-token"
+  ) {
+    const limited = await consumeUserRateLimit(userId);
+    if (limited) return limited;
+  }
   try {
     const json = await handleUpload({
       body,

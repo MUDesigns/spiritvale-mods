@@ -1,8 +1,8 @@
-import { and, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import { getDb, getSql, hasDatabase } from "@/db";
-import { appRelease, mods, modVersions, publishEvents } from "@/db/schema";
+import { appRelease, mods, modVersions } from "@/db/schema";
 import { ensureSchema } from "@/db/migrate";
-import { COMMUNITY_PUBLISH_PER_HOUR, MAX_VERSIONS_PER_MOD } from "@/lib/constants";
+import { MAX_VERSIONS_PER_MOD } from "@/lib/constants";
 import { isCatalogAdmin } from "@/lib/admin";
 import {
   deleteStoredBlob,
@@ -473,7 +473,6 @@ export async function insertScanningVersion(input: {
     })
     .returning({ id: modVersions.id });
 
-  await db.insert(publishEvents).values({ userId: input.ownerUserId });
   return { versionRowId: row?.id ?? 0 };
 }
 
@@ -501,23 +500,6 @@ export async function markVersionStatus(input: {
     .where(
       and(eq(modVersions.modId, input.modId), eq(modVersions.version, input.version)),
     );
-}
-
-export async function countRecentPublishes(userId: string): Promise<number> {
-  await ensureCatalog();
-  const db = getDb();
-  const cutoff = new Date(Date.now() - 60 * 60 * 1000);
-  const [{ count }] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(publishEvents)
-    .where(
-      and(eq(publishEvents.userId, userId), gte(publishEvents.createdAt, cutoff)),
-    );
-  return count;
-}
-
-export function publishLimitReached(count: number): boolean {
-  return count >= COMMUNITY_PUBLISH_PER_HOUR;
 }
 
 export async function listUserMods(userId: string) {

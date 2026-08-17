@@ -1,9 +1,4 @@
-import {
-  countRecentPublishes,
-  getModOwner,
-  insertScanningVersion,
-  publishLimitReached,
-} from "@/lib/catalog";
+import { getModOwner, insertScanningVersion } from "@/lib/catalog";
 import { COMMUNITY_MAX_BYTES, DESCRIPTION_MAX } from "@/lib/constants";
 import {
   isCatalogId,
@@ -13,6 +8,7 @@ import {
   sanitizeDescription,
   sanitizeQuarantinePathname,
 } from "@/lib/ids";
+import { consumeUserRateLimit } from "@/lib/rate-limit";
 
 export type CommunityPublishInput = {
   id?: string;
@@ -31,13 +27,8 @@ export async function queueCommunityPublish(
   userId: string,
   body: CommunityPublishInput,
 ): Promise<Response> {
-  const recent = await countRecentPublishes(userId);
-  if (publishLimitReached(recent)) {
-    return Response.json(
-      { error: "You can publish at most 2 community uploads per hour." },
-      { status: 429 },
-    );
-  }
+  const limited = await consumeUserRateLimit(userId);
+  if (limited) return limited;
 
   const id = body.id?.trim() ?? "";
   const name = body.name?.trim() || id;

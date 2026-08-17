@@ -3,6 +3,7 @@ import { getModOwner } from "@/lib/catalog";
 import { COMMUNITY_MAX_BYTES } from "@/lib/constants";
 import { isCatalogId, isVersion, isZipFilename, safeFilename } from "@/lib/ids";
 import { communityReady, requireApiKey } from "@/lib/user-auth";
+import { consumeUserRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,8 @@ export async function POST(request: Request) {
   if (user instanceof Response) return user;
   const denied = communityReady();
   if (denied) return denied;
+  const limited = await consumeUserRateLimit(user.userId);
+  if (limited) return limited;
 
   const body = (await request.json()) as UploadBody;
   const id = body.id?.trim() ?? "";

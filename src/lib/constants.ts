@@ -1,5 +1,6 @@
 export const COMMUNITY_MAX_BYTES = 50 * 1024 * 1024;
-export const COMMUNITY_PUBLISH_PER_HOUR = 2;
+export const RATE_LIMIT_MAX = 4;
+export const RATE_LIMIT_WINDOW_MS = 5_000;
 export const API_KEY_PREFIX = "svm_";
 export const MAX_API_KEYS_PER_USER = 5;
 export const MAX_VERSIONS_PER_MOD = 25;
