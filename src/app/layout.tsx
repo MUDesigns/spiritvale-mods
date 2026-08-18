@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Nunito, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { currentIsAdmin } from "@/lib/admin";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
@@ -62,6 +63,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           body
         )}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
