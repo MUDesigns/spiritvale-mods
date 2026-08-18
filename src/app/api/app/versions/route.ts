@@ -1,7 +1,6 @@
 import { requirePublishToken } from "@/lib/auth";
+import { upsertAppArtifact } from "@/lib/catalog";
 import { isVersion, safeFilename } from "@/lib/ids";
-import { loadCatalog, saveCatalog } from "@/lib/store";
-import type { AppRelease, CatalogArtifact } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -44,24 +43,14 @@ export async function PUT(request: Request) {
     );
   }
 
-  const publishedAt = new Date().toISOString();
-  const file: CatalogArtifact = { filename, sha256, sizeBytes, downloadUrl };
-  const catalog = await loadCatalog();
-  const current = catalog.app;
-  const next: AppRelease =
-    current && current.version === version
-      ? { ...current, changelog: body.changelog?.trim() || current.changelog, publishedAt }
-      : {
-          version,
-          changelog: body.changelog?.trim() || undefined,
-          publishedAt,
-          installer: undefined,
-          portable: undefined,
-        };
-
-  if (artifact === "installer") next.installer = file;
-  if (artifact === "portable") next.portable = file;
-  catalog.app = next;
-  await saveCatalog(catalog);
+  const next = await upsertAppArtifact({
+    version,
+    changelog: body.changelog?.trim() || undefined,
+    artifact,
+    filename,
+    sha256,
+    sizeBytes,
+    downloadUrl,
+  });
   return Response.json(next);
 }

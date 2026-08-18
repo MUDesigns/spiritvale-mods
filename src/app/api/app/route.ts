@@ -1,4 +1,4 @@
-import { loadCatalog } from "@/lib/store";
+import { loadCatalog } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
 
