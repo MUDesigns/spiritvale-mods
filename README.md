@@ -53,7 +53,7 @@ Upload pathnames for the publisher must be `mods/{id}/{version}/{filename}`, `mo
 
 See `.env.example`. Required for production community uploads:
 
-- `PUBLISH_TOKEN`, `NEXT_PUBLIC_SITE_URL`, `STORAGE_DIR`
+- `PUBLISH_TOKEN`, `NEXT_PUBLIC_SITE_URL`, `SITE_URL`, `STORAGE_DIR`
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`
 - `DATABASE_URL` (Postgres)
 - `VIRUSTOTAL_API_KEY`
@@ -62,7 +62,7 @@ See `.env.example`. Required for production community uploads:
 - `CRON_SECRET` for `/api/cron/retry-scans`
 - `BLOB_READ_WRITE_TOKEN` only for one-time `scripts/migrate-to-selfhost.mjs blobs`
 
-In the Clerk dashboard enable Email/password, Google, and Discord. Add `https://spiritvalemods.com/sign-in`, `/sign-up`, and `/sso-callback` plus Clerk's provided callback URLs (and the `www` host).
+In the Clerk dashboard (production instance) enable Email/password, Google, and Discord with **your own** OAuth credentials. Set paths to `https://www.spiritvalemods.com/sign-in`, `/sign-up`, and `/sso-callback` (plus the apex host if Clerk lists it). Add the Clerk DNS records from [Domains](https://dashboard.clerk.com/~/domains), then deploy certificates.
 
 ## Develop
 

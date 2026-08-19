@@ -8,10 +8,21 @@ const isProtectedRoute = createRouteMatcher([
   "/admin(.*)",
 ]);
 const clerkConfigured = Boolean(process.env.CLERK_SECRET_KEY?.trim());
+const clerkAuthorizedParties = [
+  "https://www.spiritvalemods.com",
+  "https://spiritvalemods.com",
+  ...(process.env.NODE_ENV === "production"
+    ? []
+    : ["http://localhost:3000", "http://127.0.0.1:3000"]),
+];
 
 function apexToWww(request: Request) {
   const host = request.headers.get("host")?.split(":")[0];
   if (host !== "spiritvalemods.com") return null;
+  const pathname = new URL(request.url).pathname;
+  if (pathname.startsWith("/api/") || pathname.startsWith("/files/")) {
+    return null;
+  }
   const dest = new URL(request.url);
   dest.hostname = "www.spiritvalemods.com";
   dest.protocol = "https:";
@@ -20,16 +31,19 @@ function apexToWww(request: Request) {
 }
 
 export default clerkConfigured
-  ? clerkMiddleware(async (auth, request) => {
-      const redirected = apexToWww(request);
-      if (redirected) return redirected;
-      if (request.nextUrl.pathname.startsWith("/api/v1")) {
-        return NextResponse.next();
-      }
-      if (isProtectedRoute(request)) {
-        await auth.protect();
-      }
-    })
+  ? clerkMiddleware(
+      async (auth, request) => {
+        const redirected = apexToWww(request);
+        if (redirected) return redirected;
+        if (request.nextUrl.pathname.startsWith("/api/v1")) {
+          return NextResponse.next();
+        }
+        if (isProtectedRoute(request)) {
+          await auth.protect();
+        }
+      },
+      { authorizedParties: clerkAuthorizedParties },
+    )
   : function proxy(request: Request) {
       return apexToWww(request) ?? NextResponse.next();
     };
