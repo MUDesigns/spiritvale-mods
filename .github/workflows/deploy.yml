@@ -97,5 +97,18 @@ jobs:
             cd /opt/spiritvale-mods
             sudo docker compose --env-file .env up -d --no-build --force-recreate web
             sudo docker logout ghcr.io >/dev/null
-            curl -fsS -o /dev/null -w "home %{http_code}\n" --max-time 30 https://www.spiritvalemods.com/
-            curl -fsS -o /dev/null -w "catalog %{http_code}\n" --max-time 30 https://www.spiritvalemods.com/api/catalog
+            code=000
+            for i in $(seq 1 45); do
+              code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 5 http://127.0.0.1:3001/ || true)
+              if [ "$code" = "200" ]; then
+                echo "home $code after $i checks"
+                break
+              fi
+              sleep 2
+            done
+            if [ "$code" != "200" ]; then
+              echo "home failed with HTTP $code"
+              sudo docker compose --env-file .env logs --tail=80 web
+              exit 1
+            fi
+            curl -fsS -o /dev/null -w "catalog %{http_code}\n" --max-time 30 http://127.0.0.1:3001/api/catalog
