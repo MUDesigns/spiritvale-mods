@@ -4,6 +4,7 @@ import { Nunito, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { currentIsAdmin } from "@/lib/admin";
+import { clerkAppearance, CLERK_TASK_URLS } from "@/lib/clerk-options";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
@@ -55,6 +56,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             signInFallbackRedirectUrl="/upload"
             signUpFallbackRedirectUrl="/upload"
             afterSignOutUrl="/"
+            taskUrls={CLERK_TASK_URLS}
+            appearance={clerkAppearance}
             unsafe_disableDevelopmentModeConsoleWarning
           >
             {body}

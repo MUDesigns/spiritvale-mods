@@ -20,15 +20,13 @@ export default function SsoCallbackPage() {
       const finishSignIn = () =>
         signIn.finalize({
           navigate: ({ session, decorateUrl }) => {
-            if (session?.currentTask) return;
-            navigateAfterAuth(router, decorateUrl);
+            navigateAfterAuth(router, decorateUrl, "/upload", session);
           },
         });
       const finishSignUp = () =>
         signUp.finalize({
           navigate: ({ session, decorateUrl }) => {
-            if (session?.currentTask) return;
-            navigateAfterAuth(router, decorateUrl);
+            navigateAfterAuth(router, decorateUrl, "/upload", session);
           },
         });
 
@@ -67,8 +65,7 @@ export default function SsoCallbackPage() {
         await clerk.setActive({
           session: sessionId,
           navigate: ({ session, decorateUrl }) => {
-            if (session?.currentTask) return;
-            navigateAfterAuth(router, decorateUrl);
+            navigateAfterAuth(router, decorateUrl, "/upload", session);
           },
         });
         return;
