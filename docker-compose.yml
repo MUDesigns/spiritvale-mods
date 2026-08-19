@@ -27,6 +27,7 @@ services:
       DATABASE_URL: postgres://spiritvale:${POSTGRES_PASSWORD}@postgres:5432/spiritvale
       STORAGE_DIR: /data/storage
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://www.spiritvalemods.com}
+      SITE_URL: ${SITE_URL:-https://www.spiritvalemods.com}
       PUBLISH_TOKEN: ${PUBLISH_TOKEN}
       UPLOAD_SECRET: ${UPLOAD_SECRET:-}
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
@@ -55,12 +56,27 @@ services:
       - traefik.http.routers.spiritvale.tls=true
       - traefik.http.routers.spiritvale.tls.certresolver=letsencrypt
       - traefik.http.routers.spiritvale.service=spiritvale
+      - traefik.http.middlewares.spiritvale-body.buffering.maxRequestBodyBytes=536870912
+      - traefik.http.routers.spiritvale-upload.rule=(Host(`www.spiritvalemods.com`) || Host(`spiritvalemods.com`)) && PathPrefix(`/api/upload`)
+      - traefik.http.routers.spiritvale-upload.entrypoints=websecure
+      - traefik.http.routers.spiritvale-upload.tls=true
+      - traefik.http.routers.spiritvale-upload.tls.certresolver=letsencrypt
+      - traefik.http.routers.spiritvale-upload.service=spiritvale
+      - traefik.http.routers.spiritvale-upload.middlewares=spiritvale-body
+      - traefik.http.routers.spiritvale-upload.priority=200
+      - traefik.http.routers.spiritvale-apex-api.rule=Host(`spiritvalemods.com`) && PathPrefix(`/api`)
+      - traefik.http.routers.spiritvale-apex-api.entrypoints=websecure
+      - traefik.http.routers.spiritvale-apex-api.tls=true
+      - traefik.http.routers.spiritvale-apex-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.spiritvale-apex-api.service=spiritvale
+      - traefik.http.routers.spiritvale-apex-api.priority=100
       - traefik.http.routers.spiritvale-apex.rule=Host(`spiritvalemods.com`)
       - traefik.http.routers.spiritvale-apex.entrypoints=websecure
       - traefik.http.routers.spiritvale-apex.tls=true
       - traefik.http.routers.spiritvale-apex.tls.certresolver=letsencrypt
       - traefik.http.routers.spiritvale-apex.middlewares=spiritvale-apex-www
       - traefik.http.routers.spiritvale-apex.service=spiritvale
+      - traefik.http.routers.spiritvale-apex.priority=10
       - traefik.http.middlewares.spiritvale-apex-www.redirectregex.regex=^https://spiritvalemods.com(.*)
       - traefik.http.middlewares.spiritvale-apex-www.redirectregex.replacement=https://www.spiritvalemods.com$${1}
       - traefik.http.middlewares.spiritvale-apex-www.redirectregex.permanent=true

@@ -9,6 +9,7 @@ import {
   sanitizeQuarantinePathname,
 } from "@/lib/ids";
 import { consumeUserRateLimit } from "@/lib/rate-limit";
+import { publicFileUrl } from "@/lib/store";
 
 export type CommunityPublishInput = {
   id?: string;
@@ -22,6 +23,20 @@ export type CommunityPublishInput = {
   sizeBytes?: number;
   filename?: string;
 };
+
+function catalogFileUrl(pathname: string | null, requested?: string): string {
+  if (!pathname) return "";
+  const value = requested?.trim() ?? "";
+  try {
+    const url = new URL(value);
+    if (url.protocol === "https:" && url.hostname.includes(".")) {
+      return value;
+    }
+  } catch {
+    // Client sent a Docker/localhost URL or omitted it.
+  }
+  return publicFileUrl(pathname);
+}
 
 export async function queueCommunityPublish(
   userId: string,
@@ -38,8 +53,8 @@ export async function queueCommunityPublish(
   const pathname = sanitizeQuarantinePathname(body.pathname ?? "", userId);
   const filename = safeFilename(body.filename ?? pathname?.split("/").pop() ?? "");
   const sha256 = body.sha256?.trim().toLowerCase() ?? "";
-  const downloadUrl = body.downloadUrl?.trim() ?? "";
   const sizeBytes = Number(body.sizeBytes ?? 0);
+  const downloadUrl = catalogFileUrl(pathname, body.downloadUrl);
 
   if (
     !isCatalogId(id) ||
@@ -48,7 +63,6 @@ export async function queueCommunityPublish(
     !filename ||
     !isZipFilename(filename) ||
     !sha256 ||
-    !downloadUrl ||
     !sizeBytes ||
     sizeBytes > COMMUNITY_MAX_BYTES ||
     (body.description !== undefined && description === undefined)
@@ -56,7 +70,7 @@ export async function queueCommunityPublish(
     return Response.json(
       {
         error:
-          `id, version, zip filename, sha256, sizeBytes, pathname, and downloadUrl are required (max 50 MB). Description max ${DESCRIPTION_MAX} characters.`,
+          `id, version, zip filename, sha256, sizeBytes, and pathname are required (max 50 MB). Description max ${DESCRIPTION_MAX} characters.`,
       },
       { status: 400 },
     );

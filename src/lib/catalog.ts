@@ -217,6 +217,28 @@ export async function getModOwner(id: string): Promise<string | null | undefined
   return row ? row.ownerUserId : undefined;
 }
 
+export async function setModOwner(
+  id: string,
+  ownerUserId: string,
+): Promise<OwnedModWriteResult> {
+  if (!hasDatabase()) {
+    return { error: "Database is not configured.", status: 503 };
+  }
+  await ensureCatalog();
+  const db = getDb();
+  const [existing] = await db.select().from(mods).where(eq(mods.id, id)).limit(1);
+  if (!existing) return { error: "Mod not found.", status: 404 };
+  await db
+    .update(mods)
+    .set({ ownerUserId, updatedAt: new Date() })
+    .where(eq(mods.id, id));
+  await db
+    .update(modVersions)
+    .set({ uploaderUserId: ownerUserId })
+    .where(eq(modVersions.modId, id));
+  return { ok: true };
+}
+
 export async function upsertLiveModVersion(input: {
   id: string;
   name: string;

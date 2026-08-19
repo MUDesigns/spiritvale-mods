@@ -101,6 +101,19 @@ export async function isCatalogAdmin(userId: string): Promise<boolean> {
   }
 }
 
+export async function clerkUserIdForEmail(emailValue: string): Promise<string | null> {
+  const email = normalizeAdminEmail(emailValue);
+  if (!email || !hasClerk()) return null;
+  try {
+    const client = await clerkClient();
+    const list = await client.users.getUserList({ emailAddress: [email], limit: 2 });
+    const rows = "data" in list ? list.data : list;
+    return rows[0]?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function currentIsAdmin(): Promise<boolean> {
   if (!hasClerk()) return false;
   try {

@@ -19,8 +19,11 @@ export const CATALOG_PAGE_SIZE_MAX = 50;
 export const ZIP_MAX_ENTRIES = 200;
 export const ZIP_MAX_UNCOMPRESSED_BYTES = 200 * 1024 * 1024;
 export const ZIP_MAX_RATIO = 100;
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://www.spiritvalemods.com";
+export const SITE_URL = (
+  process.env.SITE_URL?.trim() ||
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+  "https://www.spiritvalemods.com"
+).replace(/\/$/, "");
 export const DEFAULT_ADMIN_EMAIL = "matt03803@gmail.com";
 export const ADMIN_ALERT_EMAIL =
   process.env.ADMIN_ALERT_EMAIL?.trim() || DEFAULT_ADMIN_EMAIL;

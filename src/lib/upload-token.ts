@@ -60,23 +60,12 @@ export function verifyUploadToken(token: string): UploadTokenPayload {
   return payload;
 }
 
-export function requestOrigin(request: Request): string {
-  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
-  const forwardedProto =
-    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`;
-  }
-  try {
-    return new URL(request.url).origin;
-  } catch {
-    return SITE_URL.replace(/\/$/, "");
-  }
+export function requestOrigin(_request: Request): string {
+  return SITE_URL.replace(/\/$/, "");
 }
 
-export function catalogUploadUrl(pathname: string, origin?: string): string {
-  const base = (origin || SITE_URL).replace(/\/$/, "");
-  return `${base}/api/upload/blob?pathname=${encodeURIComponent(pathname)}`;
+export function catalogUploadUrl(pathname: string, _origin?: string): string {
+  return `${SITE_URL.replace(/\/$/, "")}/api/upload/blob?pathname=${encodeURIComponent(pathname)}`;
 }
 
 export function issueUpload(

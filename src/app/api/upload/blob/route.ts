@@ -2,7 +2,7 @@ import { Readable } from "node:stream";
 import type { ReadableStream as NodeWebReadableStream } from "node:stream/web";
 import { bearerToken } from "@/lib/auth";
 import { sanitizeStoredPathname } from "@/lib/ids";
-import { writeStoredStream } from "@/lib/store";
+import { deleteStoredBlob, writeStoredStream } from "@/lib/store";
 import { verifyUploadToken } from "@/lib/upload-token";
 
 export const dynamic = "force-dynamic";
@@ -32,15 +32,28 @@ export async function PUT(request: Request) {
       );
     }
     const stored = await writeStoredStream(pathname, requestStream(request), token.maxBytes);
+    if (length && stored.sizeBytes !== length) {
+      await deleteStoredBlob(pathname);
+      return Response.json(
+        { error: "Upload was truncated before the catalog received the full zip." },
+        { status: 400 },
+      );
+    }
     return Response.json(stored);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Upload failed.";
+    const raw = error instanceof Error ? error.message : "Upload failed.";
+    const message =
+      /eacces|permission denied/i.test(raw)
+        ? "Catalog storage is not writable. On the VPS, chown the storage volume to uid 1001."
+        : raw;
     const status =
       message.includes("expired") || message.includes("Invalid upload token")
         ? 401
         : message.includes("exceeds")
           ? 413
-          : 400;
+          : /not writable/i.test(message)
+            ? 503
+            : 400;
     return Response.json({ error: message }, { status });
   }
 }
