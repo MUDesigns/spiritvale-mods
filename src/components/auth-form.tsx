@@ -69,8 +69,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       if (statusOf(signIn) === "complete") {
         await signIn.finalize({
           navigate: ({ session, decorateUrl }) => {
-            if (session?.currentTask) return;
-            navigateAfterAuth(router, decorateUrl);
+            navigateAfterAuth(router, decorateUrl, "/upload", session);
           },
         });
         return;
@@ -106,8 +105,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     if (signUp.status === "complete") {
       await signUp.finalize({
         navigate: ({ session, decorateUrl }) => {
-          if (session?.currentTask) return;
-          navigateAfterAuth(router, decorateUrl);
+          navigateAfterAuth(router, decorateUrl, "/upload", session);
         },
       });
       return;
@@ -183,7 +181,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
-                minLength={8}
+                minLength={mode === "sign-up" ? 15 : undefined}
                 autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
               />
             </label>

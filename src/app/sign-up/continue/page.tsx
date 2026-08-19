@@ -23,8 +23,7 @@ export default function SignUpContinuePage() {
     if (signUp.status === "complete") {
       await signUp.finalize({
         navigate: ({ session, decorateUrl }) => {
-          if (session?.currentTask) return;
-          navigateAfterAuth(router, decorateUrl);
+          navigateAfterAuth(router, decorateUrl, "/upload", session);
         },
       });
       return;

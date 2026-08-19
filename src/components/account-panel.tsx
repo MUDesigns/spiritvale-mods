@@ -169,10 +169,13 @@ export function AccountPanel() {
               type="password"
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              minLength={8}
+              minLength={15}
               required
               autoComplete="new-password"
             />
+            <span className="mt-1 block text-xs font-semibold text-[#9aa3b8]">
+              At least 15 characters.
+            </span>
           </label>
           <button type="submit" className="btn btn-primary self-start" disabled={busy}>
             Update password
