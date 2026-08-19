@@ -11,49 +11,33 @@ const clerkConfigured = Boolean(process.env.CLERK_SECRET_KEY?.trim());
 const isSessionTaskRoute = createRouteMatcher(["/sign-in/tasks(.*)"]);
 const PUBLIC_HOST = "www.spiritvalemods.com";
 
-function publicForwardedHost(request: NextRequest): string {
+function publicForwardedHost(request: NextRequest): string | null {
   const raw = (
     request.headers.get("x-forwarded-host") ||
     request.headers.get("host") ||
-    PUBLIC_HOST
+    ""
   )
     .split(",")[0]
     ?.trim()
     .split(":")[0];
-  if (
-    !raw ||
-    raw === "0.0.0.0" ||
-    raw === "localhost" ||
-    raw === "127.0.0.1" ||
-    raw === "web"
-  ) {
+  if (!raw || raw === "0.0.0.0" || raw === "web") {
     return PUBLIC_HOST;
+  }
+  if (raw === "localhost" || raw === "127.0.0.1") {
+    return null;
   }
   if (raw === "spiritvalemods.com") return PUBLIC_HOST;
   return raw;
 }
 
 function withPublicForwardedHeaders(request: NextRequest): NextRequest {
-  const host = publicForwardedHost(request);
   const headers = new Headers(request.headers);
   headers.set("x-forwarded-proto", "https");
-  headers.set("x-forwarded-host", host);
-  headers.set("host", host);
-
-  const url = new URL(request.url);
-  url.protocol = "https:";
-  url.hostname = host;
-  url.port = "";
-
-  const init: ConstructorParameters<typeof NextRequest>[1] = {
-    method: request.method,
-    headers,
-  };
-  if (request.method !== "GET" && request.method !== "HEAD") {
-    init.body = request.body;
-    init.duplex = "half";
+  const host = publicForwardedHost(request);
+  if (host) {
+    headers.set("x-forwarded-host", host);
   }
-  return new NextRequest(url, init);
+  return new NextRequest(request, { headers });
 }
 
 function apexToWww(request: Request) {
