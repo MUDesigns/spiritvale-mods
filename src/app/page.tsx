@@ -20,12 +20,7 @@ export default async function Home() {
           <p className="max-w-2xl text-[#9aa3b8]">
             Download mods here and send them to SpiritVale Mod Manager with
             Install, or import zips yourself. Signed-in users can upload; they go
-            live after a clean virus scan. Chat, support, and release pings live
-            in the{" "}
-            <a href={DISCORD_INVITE_URL} className="font-bold text-[#55b7ea] hover:underline">
-              SpiritVale Mods Discord
-            </a>
-            .
+            live after a clean virus scan.
           </p>
         </div>
       </header>
@@ -51,6 +46,20 @@ export default async function Home() {
             </div>
           </section>
         ) : null}
+
+        <section className="panel flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="max-w-2xl">
+            <h2 className="text-xl font-extrabold">Join the Discord</h2>
+            <p className="mt-2 text-sm text-[#9aa3b8]">
+              New versions, install problems, and WIP builds show up there before
+              they settle into this catalog. Join, read the rules, and click
+              Verify to unlock the rest of the server.
+            </p>
+          </div>
+          <a className="btn btn-primary shrink-0 self-start sm:self-center" href={DISCORD_INVITE_URL}>
+            Join Discord
+          </a>
+        </section>
 
         <CatalogBrowser initial={listing} />
       </main>

@@ -66,7 +66,7 @@ services:
       CRON_SECRET: ${CRON_SECRET}
       DISCORD_BOT_URL: ${DISCORD_BOT_URL:-http://bot:8080}
       DISCORD_BOT_SECRET: ${DISCORD_BOT_SECRET}
-      DISCORD_INVITE_URL: ${DISCORD_INVITE_URL:-https://discord.gg/WmKSvZmhwT}
+      DISCORD_INVITE_URL: ${DISCORD_INVITE_URL:-https://discord.spiritvalemods.com}
     volumes:
       - catalog_storage:/data/storage
     mem_limit: 768m

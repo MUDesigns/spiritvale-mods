@@ -110,7 +110,7 @@ jobs:
             if bot_image:
                 updates["BOT_IMAGE"] = bot_image
             updates["DISCORD_BOT_URL"] = "http://bot:8080"
-            updates["DISCORD_INVITE_URL"] = "https://discord.gg/WmKSvZmhwT"
+            updates["DISCORD_INVITE_URL"] = "https://discord.spiritvalemods.com"
             lines = path.read_text().splitlines() if path.exists() else []
             out = []
             seen = set()

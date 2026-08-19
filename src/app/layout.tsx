@@ -7,7 +7,6 @@ import { currentIsAdmin } from "@/lib/admin";
 import { clerkAppearance, CLERK_TASK_URLS } from "@/lib/clerk-options";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { DISCORD_INVITE_URL } from "@/lib/discord";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -39,11 +38,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const isAdmin = publishableKey ? await currentIsAdmin() : false;
   const body = (
     <>
-      <SiteHeader
-        clerkEnabled={Boolean(publishableKey)}
-        isAdmin={isAdmin}
-        discordInvite={DISCORD_INVITE_URL}
-      />
+      <SiteHeader clerkEnabled={Boolean(publishableKey)} isAdmin={isAdmin} />
       <div className="flex-1">{children}</div>
       <SiteFooter />
     </>

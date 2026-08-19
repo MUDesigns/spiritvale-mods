@@ -8,11 +8,9 @@ import { useEffect, useState } from "react";
 export function SiteHeader({
   clerkEnabled,
   isAdmin = false,
-  discordInvite,
 }: {
   clerkEnabled: boolean;
   isAdmin?: boolean;
-  discordInvite: string;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -52,32 +50,19 @@ export function SiteHeader({
             >
               {menuOpen ? "Close" : "Menu"}
             </button>
-            <AuthLinks isAdmin={isAdmin} open={menuOpen} discordInvite={discordInvite} />
+            <AuthLinks isAdmin={isAdmin} open={menuOpen} />
           </>
         ) : (
-          <div className="site-menu-auth">
-            <a href={discordInvite} className="btn btn-secondary">
-              Discord
-            </a>
-            <p className="max-w-[10rem] text-right text-xs text-[#9aa3b8]">
-              Sign in coming online shortly
-            </p>
-          </div>
+          <p className="max-w-[10rem] text-right text-xs text-[#9aa3b8]">
+            Sign in coming online shortly
+          </p>
         )}
       </div>
     </nav>
   );
 }
 
-function AuthLinks({
-  isAdmin,
-  open,
-  discordInvite,
-}: {
-  isAdmin: boolean;
-  open: boolean;
-  discordInvite: string;
-}) {
+function AuthLinks({ isAdmin, open }: { isAdmin: boolean; open: boolean }) {
   const { isSignedIn, isLoaded, user } = useUser();
   const { signOut } = useClerk();
   if (!isLoaded) {
@@ -92,9 +77,6 @@ function AuthLinks({
       "Account";
     return (
       <div id="site-menu" className={`site-menu${open ? " is-open" : ""}`}>
-        <a href={discordInvite} className="site-menu-link">
-          Discord
-        </a>
         <Link href="/upload" prefetch={false} className="btn btn-primary">
           Upload
         </Link>
@@ -121,9 +103,6 @@ function AuthLinks({
   }
   return (
     <div className="site-menu-auth">
-      <a href={discordInvite} className="site-menu-link">
-        Discord
-      </a>
       <Link href="/sign-in" className="btn btn-secondary">
         Sign in
       </Link>
