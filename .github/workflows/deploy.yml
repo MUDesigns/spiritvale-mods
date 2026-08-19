@@ -137,8 +137,9 @@ jobs:
             fi
             cd /opt/spiritvale-mods
             sudo docker compose --env-file .env pull pgadmin || true
+            sudo docker compose --env-file .env pull bot || true
             sudo docker compose --env-file .env up -d --no-build pgadmin
-            sudo docker compose --env-file .env up -d --no-build bot || true
+            sudo docker compose --env-file .env up -d --no-build --force-recreate bot || true
             sudo docker compose --env-file .env up -d --no-build --force-recreate web
             sudo docker logout ghcr.io >/dev/null
             code=000
