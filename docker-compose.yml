@@ -58,6 +58,7 @@ services:
       - traefik.http.routers.spiritvale.service=spiritvale
       - traefik.http.routers.spiritvale.middlewares=spiritvale-fwd
       - traefik.http.middlewares.spiritvale-fwd.headers.customrequestheaders.X-Forwarded-Proto=https
+      - traefik.http.middlewares.spiritvale-fwd.headers.customrequestheaders.X-Forwarded-Host=www.spiritvalemods.com
       - traefik.http.middlewares.spiritvale-body.buffering.maxRequestBodyBytes=536870912
       - traefik.http.routers.spiritvale-upload.rule=(Host(`www.spiritvalemods.com`) || Host(`spiritvalemods.com`)) && PathPrefix(`/api/upload`)
       - traefik.http.routers.spiritvale-upload.entrypoints=websecure

@@ -11,8 +11,8 @@ const clerkConfigured = Boolean(process.env.CLERK_SECRET_KEY?.trim());
 const isSessionTaskRoute = createRouteMatcher(["/sign-in/tasks(.*)"]);
 const PUBLIC_HOST = "www.spiritvalemods.com";
 
-function publicForwardedHost(request: NextRequest): string | null {
-  const raw = (
+function applyPublicForwardedHeaders(request: NextRequest) {
+  const host = (
     request.headers.get("x-forwarded-host") ||
     request.headers.get("host") ||
     ""
@@ -20,24 +20,21 @@ function publicForwardedHost(request: NextRequest): string | null {
     .split(",")[0]
     ?.trim()
     .split(":")[0];
-  if (!raw || raw === "0.0.0.0" || raw === "web") {
-    return PUBLIC_HOST;
-  }
-  if (raw === "localhost" || raw === "127.0.0.1") {
-    return null;
-  }
-  if (raw === "spiritvalemods.com") return PUBLIC_HOST;
-  return raw;
-}
+  const forwardedHost =
+    !host || host === "0.0.0.0" || host === "web" || host === "spiritvalemods.com"
+      ? PUBLIC_HOST
+      : host === "localhost" || host === "127.0.0.1"
+        ? null
+        : host;
 
-function withPublicForwardedHeaders(request: NextRequest): NextRequest {
-  const headers = new Headers(request.headers);
-  headers.set("x-forwarded-proto", "https");
-  const host = publicForwardedHost(request);
-  if (host) {
-    headers.set("x-forwarded-host", host);
+  try {
+    request.headers.set("x-forwarded-proto", "https");
+    if (forwardedHost) {
+      request.headers.set("x-forwarded-host", forwardedHost);
+    }
+  } catch {
+    // NextRequest headers are sometimes immutable; Traefik still forwards https.
   }
-  return new NextRequest(request, { headers });
 }
 
 function apexToWww(request: Request) {
@@ -91,7 +88,8 @@ export default clerkConfigured
     ) {
       const redirected = apexToWww(request);
       if (redirected) return redirected;
-      return clerkHandler(withPublicForwardedHeaders(request), event);
+      applyPublicForwardedHeaders(request);
+      return clerkHandler(request, event);
     }
   : function proxy(request: Request) {
       return apexToWww(request) ?? NextResponse.next();
@@ -100,6 +98,7 @@ export default clerkConfigured
 export const config = {
   matcher: [
     "/((?!_next|api/v1|api/upload/blob|files|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|exe|webmanifest)).*)",
+    "/(api|trpc)(.*)",
     "/__clerk/(.*)",
   ],
 };

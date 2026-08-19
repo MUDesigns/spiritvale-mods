@@ -77,18 +77,18 @@ function AuthLinks({ isAdmin, open }: { isAdmin: boolean; open: boolean }) {
       "Account";
     return (
       <div id="site-menu" className={`site-menu${open ? " is-open" : ""}`}>
-        <Link href="/upload" className="btn btn-primary">
+        <Link href="/upload" prefetch={false} className="btn btn-primary">
           Upload
         </Link>
-        <Link href="/me" className="site-menu-link">
+        <Link href="/me" prefetch={false} className="site-menu-link">
           My mods
         </Link>
         {isAdmin ? (
-          <Link href="/admin" className="site-menu-link site-menu-link-admin">
+          <Link href="/admin" prefetch={false} className="site-menu-link site-menu-link-admin">
             Admin
           </Link>
         ) : null}
-        <Link href="/account" className="site-menu-link site-menu-link-account">
+        <Link href="/account" prefetch={false} className="site-menu-link site-menu-link-account">
           {label}
         </Link>
         <button
