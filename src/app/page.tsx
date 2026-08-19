@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <div className="min-h-full">
       <header className="border-b border-[var(--line)] bg-[#171b28]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-10">
+      <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 sm:px-6 sm:py-10">
           <p className="text-sm font-extrabold tracking-[0.12em] text-[#55b7ea] uppercase">
             SpiritVale
           </p>
@@ -24,9 +24,9 @@ export default async function Home() {
         </div>
       </header>
 
-      <main className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10">
+      <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-10">
         {app ? (
-          <section className="panel p-6">
+          <section className="panel p-4 sm:p-6">
             <h2 className="text-xl font-extrabold">Mod Manager {app.version}</h2>
             {app.changelog ? (
               <p className="mt-2 text-sm text-[#9aa3b8]">{app.changelog}</p>

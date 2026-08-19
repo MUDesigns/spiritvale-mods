@@ -2,6 +2,8 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function SiteHeader({
   clerkEnabled,
@@ -10,10 +12,17 @@ export function SiteHeader({
   clerkEnabled: boolean;
   isAdmin?: boolean;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
   return (
-    <nav className="border-b border-[var(--line)] bg-[#171b28]">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
-        <Link href="/" className="flex items-center gap-3">
+    <nav className="site-header">
+      <div className="site-header-inner">
+        <Link href="/" className="site-brand" onClick={() => setMenuOpen(false)}>
           <img
             src="/ui/icon-shop.png"
             alt="SpiritVale"
@@ -21,8 +30,8 @@ export function SiteHeader({
             height={42}
             className="drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]"
           />
-          <span>
-            <span className="block text-[1.35rem] leading-none font-extrabold tracking-[-0.02em]">
+          <span className="min-w-0">
+            <span className="block text-[1.2rem] leading-none font-extrabold tracking-[-0.02em] sm:text-[1.35rem]">
               SpiritVale
             </span>
             <span className="mt-1 block text-[0.72rem] font-bold tracking-[0.12em] text-[#9aa3b8] uppercase">
@@ -31,20 +40,33 @@ export function SiteHeader({
           </span>
         </Link>
         {clerkEnabled ? (
-          <AuthLinks isAdmin={isAdmin} />
+          <>
+            <button
+              type="button"
+              className="nav-toggle"
+              aria-expanded={menuOpen}
+              aria-controls="site-menu"
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              {menuOpen ? "Close" : "Menu"}
+            </button>
+            <AuthLinks isAdmin={isAdmin} open={menuOpen} />
+          </>
         ) : (
-          <p className="text-xs text-[#9aa3b8]">Sign in coming online shortly</p>
+          <p className="max-w-[10rem] text-right text-xs text-[#9aa3b8]">
+            Sign in coming online shortly
+          </p>
         )}
       </div>
     </nav>
   );
 }
 
-function AuthLinks({ isAdmin }: { isAdmin: boolean }) {
+function AuthLinks({ isAdmin, open }: { isAdmin: boolean; open: boolean }) {
   const { isSignedIn, isLoaded, user } = useUser();
   const { signOut } = useClerk();
   if (!isLoaded) {
-    return <div className="h-8 w-24" />;
+    return <div className="hidden h-8 w-24 md:block" />;
   }
   if (isSignedIn) {
     const label =
@@ -53,22 +75,19 @@ function AuthLinks({ isAdmin }: { isAdmin: boolean }) {
       user.primaryEmailAddress?.emailAddress ||
       "Account";
     return (
-      <div className="flex items-center gap-3 text-sm">
+      <div id="site-menu" className={`site-menu${open ? " is-open" : ""}`}>
         <Link href="/upload" className="btn btn-primary">
           Upload
         </Link>
-        <Link href="/me" className="font-extrabold text-[#9aa3b8] hover:text-white">
+        <Link href="/me" className="site-menu-link">
           My mods
         </Link>
         {isAdmin ? (
-          <Link href="/admin" className="font-extrabold text-[#f0c14a] hover:text-white">
+          <Link href="/admin" className="site-menu-link site-menu-link-admin">
             Admin
           </Link>
         ) : null}
-        <Link
-          href="/account"
-          className="max-w-[12rem] truncate font-extrabold text-[#55b7ea]"
-        >
+        <Link href="/account" className="site-menu-link site-menu-link-account">
           {label}
         </Link>
         <button
@@ -82,7 +101,7 @@ function AuthLinks({ isAdmin }: { isAdmin: boolean }) {
     );
   }
   return (
-    <div className="flex items-center gap-3 text-sm">
+    <div className="site-menu-auth">
       <Link href="/sign-in" className="btn btn-secondary">
         Sign in
       </Link>

@@ -1,7 +1,7 @@
 "use client";
 
-import { upload } from "@vercel/blob/client";
 import { useRef, useState } from "react";
+import { putCatalogFile, requestCatalogUpload } from "@/lib/browser-upload";
 import {
   IMAGE_MAX_BYTES,
   MAX_IMAGES_PER_MOD,
@@ -53,11 +53,12 @@ export function ModImagesPanel({
           throw new Error(`Each image must be ${formatBytes(IMAGE_MAX_BYTES)} or smaller.`);
         }
         const pathname = `mods/${id}/images/${crypto.randomUUID()}/${filename}`;
-        const blob = await upload(pathname, file, {
-          access: "public",
-          handleUploadUrl: "/api/community/image-upload-token",
-          clientPayload: JSON.stringify({ id }),
+        const token = await requestCatalogUpload("/api/community/image-upload-token", {
+          pathname,
+          id,
+          contentType: file.type || "application/octet-stream",
         });
+        const blob = await putCatalogFile(token, file, file.type || "application/octet-stream");
         const response = await fetch(`/api/community/mods/${id}/images`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

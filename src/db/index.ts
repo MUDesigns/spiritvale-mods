@@ -1,27 +1,34 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
+
+const globalForPg = globalThis as unknown as {
+  __spiritvaleSql?: ReturnType<typeof postgres>;
+};
 
 export function hasDatabase(): boolean {
   return Boolean(process.env.DATABASE_URL?.trim());
 }
 
-function createDb() {
+function createSql() {
   const url = process.env.DATABASE_URL?.trim();
   if (!url) {
     throw new Error("DATABASE_URL is not configured.");
   }
-  return drizzle(neon(url), { schema });
+  if (!globalForPg.__spiritvaleSql) {
+    globalForPg.__spiritvaleSql = postgres(url, {
+      max: 4,
+      idle_timeout: 20,
+      connect_timeout: 10,
+    });
+  }
+  return globalForPg.__spiritvaleSql;
 }
 
 export function getSql() {
-  const url = process.env.DATABASE_URL?.trim();
-  if (!url) {
-    throw new Error("DATABASE_URL is not configured.");
-  }
-  return neon(url);
+  return createSql();
 }
 
 export function getDb() {
-  return createDb();
+  return drizzle(createSql(), { schema });
 }

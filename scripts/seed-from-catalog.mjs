@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { neon } from "@neondatabase/serverless";
+import { openSql } from "./db.mjs";
 
 function loadEnvLocal() {
   const text = readFileSync(new URL("../.env.local", import.meta.url), "utf8");
@@ -12,12 +12,12 @@ function loadEnvLocal() {
 
 loadEnvLocal();
 
-const sql = neon(process.env.DATABASE_URL);
-const [{ count }] = await sql`SELECT count(*)::int AS count FROM mods`;
-if (count > 0) {
-  console.log(`seed skipped: ${count} mods already present`);
-  process.exit(0);
-}
+const sql = openSql();
+try {
+  const [{ count }] = await sql`SELECT count(*)::int AS count FROM mods`;
+  if (Number(count) > 0) {
+    console.log(`seed skipped: ${count} mods already present`);
+  } else {
 
 const catalog = await fetch("https://www.spiritvalemods.com/api/catalog").then(
   (res) => res.json(),
@@ -80,3 +80,7 @@ if (app) {
 
 const [{ modsNow }] = await sql`SELECT count(*)::int AS "modsNow" FROM mods`;
 console.log(`seed complete: ${modsNow} mods`);
+  }
+} finally {
+  await sql.end();
+}

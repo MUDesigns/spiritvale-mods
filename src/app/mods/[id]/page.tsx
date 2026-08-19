@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { loadCatalog } from "@/lib/catalog";
-import { formatBytes, formatDate, formatDownloads } from "@/lib/format";
+import { catalogDisplayTitle, formatBytes, formatDate, formatDownloads } from "@/lib/format";
 import { InstallWithManagerButton } from "@/components/install-with-manager";
 import { ModGallery } from "@/components/mod-gallery";
 import { isCatalogId } from "@/lib/ids";
@@ -22,11 +22,11 @@ export default async function ModPage({
   const mod = publicMod(raw);
 
   return (
-    <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <Link href="/" className="text-sm font-extrabold text-[#55b7ea]">
         ← Back to catalog
       </Link>
-      <section className="panel p-6">
+      <section className="panel p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div className="flex min-w-0 items-start gap-3">
             {mod.thumbnailUrl ? (
@@ -40,7 +40,9 @@ export default async function ModPage({
             ) : null}
             <div className="min-w-0">
               <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
-              <h1 className="mt-1 text-3xl font-extrabold">{mod.name}</h1>
+            <h1 className="mt-1 text-2xl font-extrabold sm:text-3xl">
+                {catalogDisplayTitle(mod.name, mod.filename)}
+              </h1>
               <p className="mt-2 text-sm text-[#9aa3b8]">
                 v{mod.latestVersion} · {formatBytes(mod.sizeBytes)} ·{" "}
                 {formatDownloads(mod.downloadCount)} · Updated {formatDate(mod.publishedAt)}
@@ -75,7 +77,7 @@ export default async function ModPage({
       <section className="flex flex-col gap-3">
         <h2 className="section-title text-xl">Files</h2>
         <div className="table-wrap">
-          <table className="catalog-table">
+          <table className="catalog-table files-table">
             <thead>
               <tr>
                 <th>Version</th>
@@ -98,10 +100,12 @@ export default async function ModPage({
                 },
               ]).map((entry) => (
                 <tr key={entry.version} className="catalog-row">
-                  <td className="font-extrabold">v{entry.version}</td>
-                  <td>{formatBytes(entry.sizeBytes)}</td>
-                  <td>{formatDate(entry.publishedAt)}</td>
-                  <td className="max-w-xl text-sm text-[#9aa3b8]">
+                  <td data-label="Version" className="font-extrabold">
+                    v{entry.version}
+                  </td>
+                  <td data-label="Size">{formatBytes(entry.sizeBytes)}</td>
+                  <td data-label="Published">{formatDate(entry.publishedAt)}</td>
+                  <td data-label="Changelog" className="max-w-xl text-sm text-[#9aa3b8]">
                     {entry.changelog || "—"}
                   </td>
                   <td>

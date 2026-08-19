@@ -1,8 +1,8 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { upload } from "@vercel/blob/client";
 import { useState } from "react";
+import { putCatalogFile, requestCatalogUpload } from "@/lib/browser-upload";
 import { COMMUNITY_MAX_BYTES, DESCRIPTION_MAX } from "@/lib/constants";
 import { formatBytes } from "@/lib/format";
 
@@ -50,11 +50,13 @@ export function UploadForm() {
     try {
       const sha256 = await sha256File(file);
       const pathname = `quarantine/${user.id}/${crypto.randomUUID()}/${file.name}`;
-      const blob = await upload(pathname, file, {
-        access: "public",
-        handleUploadUrl: "/api/community/upload-token",
-        clientPayload: JSON.stringify({ id, version }),
+      const token = await requestCatalogUpload("/api/community/upload-token", {
+        pathname,
+        id,
+        version,
+        contentType: file.type || "application/zip",
       });
+      const blob = await putCatalogFile(token, file, file.type || "application/zip");
       setStatus("Queued for virus scan…");
       const response = await fetch("/api/community/publish", {
         method: "POST",

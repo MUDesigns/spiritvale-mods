@@ -10,6 +10,7 @@ import {
   publishModZip,
   saveCatalog as saveCatalogToBlob,
 } from "@/lib/store";
+import { catalogDisplayTitle, looksLikeZipName } from "@/lib/format";
 import { isVersion, sanitizeImagePathname } from "@/lib/ids";
 import type {
   AppRelease,
@@ -28,6 +29,13 @@ export { hasDatabase };
 
 function asIso(value: Date | string): string {
   return value instanceof Date ? value.toISOString() : value;
+}
+
+function storedModName(existing: string | undefined, incoming: string, filename: string): string {
+  if (existing && !looksLikeZipName(existing, filename) && looksLikeZipName(incoming, filename)) {
+    return existing;
+  }
+  return catalogDisplayTitle(incoming, filename);
 }
 
 function artifactFrom(
@@ -242,7 +250,7 @@ export async function upsertLiveModVersion(input: {
     ].slice(0, MAX_VERSIONS_PER_MOD);
     const next: CatalogMod = {
       id: input.id,
-      name: input.name,
+      name: storedModName(existing?.name, input.name, input.filename),
       description: input.description ?? existing?.description,
       latestVersion: input.version,
       changelog: input.changelog,
@@ -265,10 +273,11 @@ export async function upsertLiveModVersion(input: {
     input.blobPath ?? `mods/${input.id}/${input.version}/${input.filename}`;
 
   const [existing] = await db.select().from(mods).where(eq(mods.id, input.id)).limit(1);
+  const name = storedModName(existing?.name, input.name, input.filename);
   if (!existing) {
     await db.insert(mods).values({
       id: input.id,
-      name: input.name,
+      name,
       description: input.description || null,
       ownerUserId: input.ownerUserId ?? null,
     });
@@ -276,7 +285,7 @@ export async function upsertLiveModVersion(input: {
     await db
       .update(mods)
       .set({
-        name: input.name,
+        name,
         ...(input.description ? { description: input.description } : {}),
         updatedAt: publishedAt,
       })
@@ -439,10 +448,11 @@ export async function insertScanningVersion(input: {
   const publishedAt = new Date();
 
   const [existing] = await db.select().from(mods).where(eq(mods.id, input.id)).limit(1);
+  const name = storedModName(existing?.name, input.name, input.filename);
   if (!existing) {
     await db.insert(mods).values({
       id: input.id,
-      name: input.name,
+      name,
       description: input.description || null,
       ownerUserId: input.ownerUserId,
     });
@@ -450,7 +460,7 @@ export async function insertScanningVersion(input: {
     await db
       .update(mods)
       .set({
-        name: input.name,
+        name,
         ...(input.description ? { description: input.description } : {}),
         updatedAt: publishedAt,
       })
@@ -657,33 +667,28 @@ function likeNeedle(query: string): string {
   return `%${query.replace(/[%_\\]/g, "")}%`;
 }
 
-function asSummary(row: {
-  id: string;
-  name: string;
-  description: string | null;
-  latestVersion: string;
-  changelog: string | null;
-  filename: string;
-  sha256: string;
-  sizeBytes: number | string;
-  downloadUrl: string;
-  publishedAt: Date | string;
-  downloadCount?: number | string | null;
-  thumbnailUrl?: string | null;
-}): PublicModSummary {
+function field(row: Record<string, unknown>, name: string): unknown {
+  if (name in row) return row[name];
+  const lower = name.toLowerCase();
+  if (lower in row) return row[lower];
+  const snake = name.replace(/[A-Z]/g, (char) => `_${char.toLowerCase()}`);
+  return row[snake];
+}
+
+function asSummary(row: Record<string, unknown>): PublicModSummary {
   return publicModSummary({
-    id: row.id,
-    name: row.name,
-    description: row.description ?? "",
-    latestVersion: row.latestVersion,
-    changelog: row.changelog ?? "",
-    filename: row.filename,
-    sha256: row.sha256,
-    sizeBytes: Number(row.sizeBytes),
-    downloadUrl: row.downloadUrl,
-    publishedAt: asIso(row.publishedAt),
-    downloadCount: Number(row.downloadCount ?? 0),
-    thumbnailUrl: row.thumbnailUrl || undefined,
+    id: String(field(row, "id") ?? ""),
+    name: String(field(row, "name") ?? ""),
+    description: String(field(row, "description") ?? ""),
+    latestVersion: String(field(row, "latestVersion") ?? ""),
+    changelog: String(field(row, "changelog") ?? ""),
+    filename: String(field(row, "filename") ?? ""),
+    sha256: String(field(row, "sha256") ?? ""),
+    sizeBytes: Number(field(row, "sizeBytes") ?? 0),
+    downloadUrl: String(field(row, "downloadUrl") ?? ""),
+    publishedAt: asIso(field(row, "publishedAt") as Date | string),
+    downloadCount: Number(field(row, "downloadCount") ?? 0),
+    thumbnailUrl: (field(row, "thumbnailUrl") as string | null | undefined) || undefined,
   });
 }
 
@@ -739,7 +744,7 @@ export async function queryPublicMods(input: {
   const sql = getSql();
   const like = likeNeedle(q);
   const offset = (page - 1) * pageSize;
-  const rows = (await sql.query(
+  const rows = (await sql.unsafe(
     `
     WITH latest AS (
       SELECT DISTINCT ON (mod_id)
@@ -781,11 +786,9 @@ export async function queryPublicMods(input: {
     LIMIT $3 OFFSET $4
     `,
     [q, like, pageSize, offset],
-  )) as Array<
-    Parameters<typeof asSummary>[0] & { total: number }
-  >;
+  )) as Array<Record<string, unknown>>;
 
-  const total = rows[0]?.total ?? 0;
+  const total = Number(field(rows[0] ?? {}, "total") ?? 0);
   return {
     mods: rows.map(asSummary),
     total,

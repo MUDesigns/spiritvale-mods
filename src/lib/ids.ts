@@ -100,3 +100,38 @@ export function sanitizePathname(pathname: string): string | null {
   }
   return null;
 }
+
+export function sanitizeStoredPathname(pathname: string): string | null {
+  const cleaned = pathname.replace(/\\/g, "/").replace(/^\/+/, "");
+  if (!cleaned || cleaned.includes("..") || cleaned.startsWith("http")) {
+    return null;
+  }
+  if (cleaned === "catalog.json") return cleaned;
+  const publicPath = sanitizePathname(cleaned);
+  if (publicPath) return publicPath;
+  const parts = cleaned.split("/").filter(Boolean);
+  if (parts[0] === "quarantine" && parts.length === 4) {
+    const [, owner, uploadId, filename] = parts;
+    if (!/^[A-Za-z0-9_-]+$/.test(owner) || !UUID.test(uploadId) || !isZipFilename(filename)) {
+      return null;
+    }
+    return `quarantine/${owner}/${uploadId}/${safeFilename(filename)}`;
+  }
+  if (parts[0] === "mods" && parts.length === 5 && parts[2] === "images") {
+    const [, id, , imageId, filename] = parts;
+    const safeName = safeFilename(filename);
+    if (!isCatalogId(id) || !UUID.test(imageId) || !safeName || !isImageFilename(safeName)) {
+      return null;
+    }
+    return `mods/${id}/images/${imageId}/${safeName}`;
+  }
+  return null;
+}
+
+export function sanitizePublicFilePath(pathname: string): string | null {
+  const cleaned = sanitizeStoredPathname(pathname);
+  if (!cleaned || cleaned === "catalog.json" || cleaned.startsWith("quarantine/")) {
+    return null;
+  }
+  return cleaned;
+}

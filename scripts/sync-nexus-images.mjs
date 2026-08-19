@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { put } from "@vercel/blob";
-import { neon } from "@neondatabase/serverless";
+import { catalogPutFile } from "./catalog-put.mjs";
+import { openSql } from "./db.mjs";
 
 const GRAPHQL_URL = "https://api.nexusmods.com/v2/graphql";
 const CATALOG_URL = "https://www.spiritvalemods.com";
@@ -144,16 +144,16 @@ loadEnvLocal();
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is required.");
 }
-if (!process.env.BLOB_READ_WRITE_TOKEN) {
-  throw new Error("BLOB_READ_WRITE_TOKEN is required.");
+if (!process.env.PUBLISH_TOKEN) {
+  throw new Error("PUBLISH_TOKEN is required.");
 }
 
 const map = JSON.parse(readFileSync(MAP_PATH, "utf8"));
 const catalog = await fetch(`${CATALOG_URL}/api/catalog`).then((res) => res.json());
 const nexusMods = await fetchNexusMods();
 const byUid = new Map(nexusMods.map((mod) => [String(mod.uid), mod]));
-const sql = neon(process.env.DATABASE_URL);
-
+const sql = openSql();
+try {
 await sql`ALTER TABLE mods ADD COLUMN IF NOT EXISTS thumbnail_image_id text`;
 await sql`
   CREATE TABLE IF NOT EXISTS mod_images (
@@ -241,19 +241,19 @@ for (const mod of catalog.mods ?? []) {
     const imageId = randomUUID();
     const filename = `nexus-${added + 1}.${ext}`;
     const blobPath = `mods/${mod.id}/images/${imageId}/${filename}`;
-    const blob = await put(blobPath, buffer, {
-      access: "public",
-      addRandomSuffix: false,
-      allowOverwrite: true,
+    const url = await catalogPutFile({
+      catalogUrl: CATALOG_URL,
+      publishToken: process.env.PUBLISH_TOKEN,
+      pathname: blobPath,
+      body: buffer,
       contentType: contentTypeFor(ext),
-      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
     await sql`
       INSERT INTO mod_images (id, mod_id, url, blob_path, filename, size_bytes, sort_order, source_url)
       VALUES (
         ${imageId},
         ${mod.id},
-        ${blob.url},
+        ${url},
         ${blobPath},
         ${filename},
         ${buffer.byteLength},
@@ -282,3 +282,6 @@ for (const mod of catalog.mods ?? []) {
 }
 
 console.log(`done: imported ${imported} images, skipped ${skipped} mods`);
+} finally {
+  await sql.end();
+}

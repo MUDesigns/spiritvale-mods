@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { neon } from "@neondatabase/serverless";
+import { openSql } from "./db.mjs";
 
 const EMAIL = "matt03803@gmail.com";
 
@@ -58,25 +58,29 @@ if (!userId) {
   throw new Error("Clerk user is missing an id.");
 }
 
-const sql = neon(databaseUrl);
-const owned = await sql`
-  UPDATE mods
-  SET owner_user_id = ${userId}, updated_at = now()
-  WHERE owner_user_id IS NULL
-  RETURNING id
-`;
-if (owned.length > 0) {
-  const ids = owned.map((row) => row.id);
-  await sql`
-    UPDATE mod_versions
-    SET uploader_user_id = ${userId}
-    WHERE uploader_user_id IS NULL
-      AND mod_id IN (${ids})
+const sql = openSql(databaseUrl);
+try {
+  const owned = await sql`
+    UPDATE mods
+    SET owner_user_id = ${userId}, updated_at = now()
+    WHERE owner_user_id IS NULL
+    RETURNING id
   `;
-}
+  if (owned.length > 0) {
+    const ids = owned.map((row) => row.id);
+    await sql`
+      UPDATE mod_versions
+      SET uploader_user_id = ${userId}
+      WHERE uploader_user_id IS NULL
+        AND mod_id IN ${sql(ids)}
+    `;
+  }
 
-console.log(
-  `attributed ${owned.length} mods to ${EMAIL}${google ? " (Google)" : ""}: ${
-    owned.map((row) => row.id).join(", ") || "(none)"
-  }`,
-);
+  console.log(
+    `attributed ${owned.length} mods to ${EMAIL}${google ? " (Google)" : ""}: ${
+      owned.map((row) => row.id).join(", ") || "(none)"
+    }`,
+  );
+} finally {
+  await sql.end();
+}

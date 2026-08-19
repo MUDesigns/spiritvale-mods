@@ -2,8 +2,14 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { excerpt, formatBytes, formatDownloads, formatDate } from "@/lib/format";
-import type { CatalogSort, PublicModPage } from "@/lib/types";
+import {
+  catalogDisplayTitle,
+  excerpt,
+  formatBytes,
+  formatDownloads,
+  formatDate,
+} from "@/lib/format";
+import type { CatalogSort, PublicModPage, PublicModSummary } from "@/lib/types";
 import { InstallWithManagerButton } from "@/components/install-with-manager";
 
 const SORTS: { value: CatalogSort; label: string }[] = [
@@ -129,78 +135,59 @@ export function CatalogBrowser({ initial }: { initial: PublicModPage }) {
           </p>
         </div>
       ) : (
-        <div className="table-wrap">
-          <table className="catalog-table">
-            <thead>
-              <tr>
-                <th>Mod</th>
-                <th className="hidden whitespace-nowrap sm:table-cell catalog-col-meta">Version</th>
-                <th className="hidden whitespace-nowrap md:table-cell catalog-col-downloads">
-                  Downloads
-                </th>
-                <th className="hidden whitespace-nowrap md:table-cell catalog-col-meta">Size</th>
-                <th className="hidden whitespace-nowrap lg:table-cell catalog-col-meta">Updated</th>
-                <th className="catalog-actions">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.mods.map((mod) => (
-                <tr key={mod.id} className="catalog-row">
-                  <td>
-                    <div className="catalog-mod-cell">
-                      {mod.thumbnailUrl ? (
-                        <img
-                          className="mod-thumb"
-                          src={mod.thumbnailUrl}
-                          alt=""
-                          width={40}
-                          height={40}
-                        />
-                      ) : (
-                        <span className="mod-thumb mod-thumb-empty" aria-hidden />
-                      )}
-                      <div className="min-w-0">
-                        <Link href={`/mods/${mod.id}`} className="font-extrabold hover:text-[#55b7ea]">
-                          {mod.name}
-                        </Link>
-                        <p className="mt-0.5 font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
-                        <p className="mt-0.5 text-xs text-[#9aa3b8] md:hidden">
-                          {formatDownloads(mod.downloadCount)}
-                        </p>
-                        {mod.description ? (
-                          <p className="catalog-mod-excerpt mt-1 text-sm text-[#9aa3b8]">
-                            {excerpt(mod.description, 90)}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="hidden whitespace-nowrap sm:table-cell">v{mod.latestVersion}</td>
-                  <td className="hidden whitespace-nowrap md:table-cell">
-                    {formatDownloads(mod.downloadCount)}
-                  </td>
-                  <td className="hidden whitespace-nowrap md:table-cell">
-                    {formatBytes(mod.sizeBytes)}
-                  </td>
-                  <td className="hidden whitespace-nowrap lg:table-cell">
-                    {formatDate(mod.publishedAt)}
-                  </td>
-                  <td className="catalog-actions">
-                    <InstallWithManagerButton id={mod.id} compact />
-                    <a className="btn btn-secondary btn-compact" href={mod.downloadUrl}>
-                      Download
-                    </a>
-                  </td>
+        <>
+          <ul className="catalog-cards">
+            {data.mods.map((mod) => (
+              <li key={mod.id}>
+                <CatalogModCard mod={mod} />
+              </li>
+            ))}
+          </ul>
+          <div className="table-wrap catalog-table-desktop">
+            <table className="catalog-table">
+              <thead>
+                <tr>
+                  <th>Mod</th>
+                  <th className="whitespace-nowrap catalog-col-meta">Version</th>
+                  <th className="whitespace-nowrap catalog-col-downloads">Downloads</th>
+                  <th className="whitespace-nowrap catalog-col-meta">Size</th>
+                  <th className="hidden whitespace-nowrap lg:table-cell catalog-col-meta">
+                    Updated
+                  </th>
+                  <th className="catalog-actions">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {data.mods.map((mod) => (
+                  <tr key={mod.id} className="catalog-row">
+                    <td>
+                      <ModIdentity mod={mod} excerptLength={90} />
+                    </td>
+                    <td className="whitespace-nowrap">v{mod.latestVersion}</td>
+                    <td className="whitespace-nowrap">{formatDownloads(mod.downloadCount)}</td>
+                    <td className="whitespace-nowrap">{formatBytes(mod.sizeBytes)}</td>
+                    <td className="hidden whitespace-nowrap lg:table-cell">
+                      {formatDate(mod.publishedAt)}
+                    </td>
+                    <td className="catalog-actions">
+                      <div className="catalog-actions-inner">
+                        <InstallWithManagerButton id={mod.id} compact />
+                        <a className="btn btn-secondary btn-compact" href={mod.downloadUrl}>
+                          Download
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-[#9aa3b8]">
+      <div className="catalog-pager text-sm text-[#9aa3b8]">
         <p>{busy ? "Updating…" : showing}</p>
-        <div className="flex items-center gap-2">
+        <div className="catalog-pager-buttons">
           <button
             type="button"
             className="btn btn-secondary"
@@ -223,5 +210,54 @@ export function CatalogBrowser({ initial }: { initial: PublicModPage }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function ModIdentity({
+  mod,
+  excerptLength,
+}: {
+  mod: PublicModSummary;
+  excerptLength: number;
+}) {
+  return (
+    <div className="catalog-mod-cell">
+      {mod.thumbnailUrl ? (
+        <img className="mod-thumb" src={mod.thumbnailUrl} alt="" width={40} height={40} />
+      ) : (
+        <span className="mod-thumb mod-thumb-empty" aria-hidden />
+      )}
+      <div className="min-w-0">
+        <Link href={`/mods/${mod.id}`} className="font-extrabold hover:text-[#55b7ea]">
+          {catalogDisplayTitle(mod.name, mod.filename)}
+        </Link>
+        <p className="mt-0.5 font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
+        {mod.description ? (
+          <p className="catalog-mod-excerpt mt-1 text-sm text-[#9aa3b8]">
+            {excerpt(mod.description, excerptLength)}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function CatalogModCard({ mod }: { mod: PublicModSummary }) {
+  return (
+    <article className="catalog-card">
+      <ModIdentity mod={mod} excerptLength={140} />
+      <p className="catalog-card-meta">
+        <span>v{mod.latestVersion}</span>
+        <span>{formatDownloads(mod.downloadCount)}</span>
+        <span>{formatBytes(mod.sizeBytes)}</span>
+        <span>{formatDate(mod.publishedAt)}</span>
+      </p>
+      <div className="catalog-card-actions">
+        <InstallWithManagerButton id={mod.id} compact />
+        <a className="btn btn-secondary btn-compact" href={mod.downloadUrl}>
+          Download
+        </a>
+      </div>
+    </article>
   );
 }

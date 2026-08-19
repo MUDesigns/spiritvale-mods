@@ -9,7 +9,7 @@ export default async function UploadPage() {
   if (!userId) redirect("/sign-in");
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-6 px-6 py-10">
+    <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <div>
         <h1 className="text-2xl font-extrabold">Upload a mod</h1>
         <p className="mt-2 text-sm text-[#9aa3b8]">
@@ -29,7 +29,7 @@ export default async function UploadPage() {
           .
         </p>
       </div>
-      <div className="panel p-6">
+      <div className="panel p-4 sm:p-6">
         <UploadForm />
       </div>
     </main>

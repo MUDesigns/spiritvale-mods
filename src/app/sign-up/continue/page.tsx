@@ -33,8 +33,8 @@ export default function SignUpContinuePage() {
   }
 
   return (
-    <main className="flex min-h-[70vh] items-center justify-center px-6 py-12">
-        <div className="panel w-full max-w-md p-8">
+    <main className="flex min-h-[70vh] w-full items-center justify-center px-4 py-12 sm:px-6">
+        <div className="panel w-full max-w-md p-5 sm:p-8">
         <h1 className="text-2xl font-extrabold text-[#f4f7fb]">Finish creating your account</h1>
         <p className="mt-2 text-sm text-[#9aa3b8]">A couple more details and you’re in.</p>
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">

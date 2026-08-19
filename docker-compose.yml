@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    command: postgres -c shared_buffers=256MB -c max_connections=50
+    environment:
+      POSTGRES_USER: spiritvale
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: spiritvale
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spiritvale -d spiritvale"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  web:
+    image: ${WEB_IMAGE:-spiritvale-mods:latest}
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://spiritvale:${POSTGRES_PASSWORD}@postgres:5432/spiritvale
+      STORAGE_DIR: /data/storage
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://www.spiritvalemods.com}
+      PUBLISH_TOKEN: ${PUBLISH_TOKEN}
+      UPLOAD_SECRET: ${UPLOAD_SECRET:-}
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      CLERK_SECRET_KEY: ${CLERK_SECRET_KEY}
+      NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+      NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+      VIRUSTOTAL_API_KEY: ${VIRUSTOTAL_API_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM: ${RESEND_FROM:-SpiritVale Mods <beth.t@example.com>}
+      ADMIN_ALERT_EMAIL: ${ADMIN_ALERT_EMAIL:-matt03803@gmail.com}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-matt03803@gmail.com}
+      CRON_SECRET: ${CRON_SECRET}
+    volumes:
+      - catalog_storage:/data/storage
+    mem_limit: 768m
+    ports:
+      - "3001:3000"
+    networks:
+      - default
+      - dokploy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.spiritvale.rule=Host(`www.spiritvalemods.com`)
+      - traefik.http.routers.spiritvale.entrypoints=websecure
+      - traefik.http.routers.spiritvale.tls=true
+      - traefik.http.routers.spiritvale.tls.certresolver=letsencrypt
+      - traefik.http.routers.spiritvale.service=spiritvale
+      - traefik.http.routers.spiritvale-apex.rule=Host(`spiritvalemods.com`)
+      - traefik.http.routers.spiritvale-apex.entrypoints=websecure
+      - traefik.http.routers.spiritvale-apex.tls=true
+      - traefik.http.routers.spiritvale-apex.tls.certresolver=letsencrypt
+      - traefik.http.routers.spiritvale-apex.middlewares=spiritvale-apex-www
+      - traefik.http.routers.spiritvale-apex.service=spiritvale
+      - traefik.http.middlewares.spiritvale-apex-www.redirectregex.regex=^https://spiritvalemods.com(.*)
+      - traefik.http.middlewares.spiritvale-apex-www.redirectregex.replacement=https://www.spiritvalemods.com$${1}
+      - traefik.http.middlewares.spiritvale-apex-www.redirectregex.permanent=true
+      - traefik.http.routers.spiritvale-http.rule=(Host(`www.spiritvalemods.com`) || Host(`spiritvalemods.com`)) && !PathPrefix(`/.well-known/acme-challenge`)
+      - traefik.http.routers.spiritvale-http.entrypoints=web
+      - traefik.http.routers.spiritvale-http.middlewares=redirect-to-https@file
+      - traefik.http.routers.spiritvale-http.service=spiritvale
+      - traefik.http.services.spiritvale.loadbalancer.server.port=3000
+
+volumes:
+  postgres_data:
+  catalog_storage:
+
+networks:
+  dokploy:
+    external: true
+    name: dokploy-network

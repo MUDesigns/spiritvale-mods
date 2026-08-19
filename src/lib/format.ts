@@ -42,3 +42,31 @@ export function excerpt(text: string, max = 140): string {
   if (compact.length <= max) return compact;
   return `${compact.slice(0, max).trimEnd()}…`;
 }
+
+function zipStem(filename: string): string {
+  return filename.replace(/\.zip$/i, "").replace(/-\d+(?:\.\d+)*$/, "");
+}
+
+export function looksLikeZipName(value: string, filename?: string): boolean {
+  const compact = value.replace(/[\s_-]+/g, "").toLowerCase();
+  if (!compact) return true;
+  if (/\s/.test(value.trim())) return false;
+  if (filename) {
+    const stem = zipStem(filename).replace(/[\s_-]+/g, "").toLowerCase();
+    if (compact === stem) return true;
+  }
+  return /^[a-z0-9]+$/i.test(value.replace(/[-_]/g, ""));
+}
+
+export function catalogDisplayTitle(name: string, filename?: string): string {
+  const trimmed = name.trim();
+  if (!looksLikeZipName(trimmed, filename)) return trimmed;
+  const spaced = trimmed
+    .replace(/[-_]+/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim();
+  const withoutBrand = spaced.replace(/^Spirit\s*Vale\s+/i, "").trim();
+  return withoutBrand || spaced || trimmed;
+}

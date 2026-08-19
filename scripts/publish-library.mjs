@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { put } from "@vercel/blob";
+import { catalogPutFile } from "./catalog-put.mjs";
 
 const CATALOG_URL = "https://www.spiritvalemods.com";
 const LIBRARY = path.join(
@@ -45,7 +45,7 @@ function loadEnvLocal() {
     "utf8",
   );
   for (const line of text.split(/\r?\n/)) {
-    const match = line.match(/^(BLOB_READ_WRITE_TOKEN|PUBLISH_TOKEN)=(.*)$/);
+    const match = line.match(/^(PUBLISH_TOKEN|CATALOG_URL)=(.*)$/);
     if (!match) continue;
     process.env[match[1]] = match[2].trim().replace(/^"|"$/g, "");
   }
@@ -53,10 +53,9 @@ function loadEnvLocal() {
 
 loadEnvLocal();
 
-const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
 const publishToken = process.env.PUBLISH_TOKEN;
-if (!blobToken || !publishToken) {
-  throw new Error("BLOB_READ_WRITE_TOKEN and PUBLISH_TOKEN are required.");
+if (!publishToken) {
+  throw new Error("PUBLISH_TOKEN is required.");
 }
 
 function hasNexusCredentials(meta) {
@@ -91,12 +90,12 @@ for (const zipFile of files) {
   const pathname = `mods/${id}/${version}/${filename}`;
 
   console.log(`uploading ${name} (${id} v${version})...`);
-  const blob = await put(pathname, bytes, {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
+  const downloadUrl = await catalogPutFile({
+    catalogUrl: CATALOG_URL,
+    publishToken,
+    pathname,
+    body: bytes,
     contentType: "application/zip",
-    token: blobToken,
   });
 
   const response = await fetch(`${CATALOG_URL}/api/mods/${id}/versions`, {
@@ -112,7 +111,7 @@ for (const zipFile of files) {
       filename,
       sha256,
       sizeBytes: bytes.length,
-      downloadUrl: blob.downloadUrl || blob.url,
+      downloadUrl,
     }),
   });
   const text = await response.text();

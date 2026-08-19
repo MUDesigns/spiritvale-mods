@@ -1,9 +1,8 @@
 import { createHash } from "node:crypto";
-import { del } from "@vercel/blob";
 import { clerkClient } from "@clerk/nextjs/server";
 import { getVersion, markVersionStatus } from "@/lib/catalog";
 import { sendQuarantineAlert } from "@/lib/mail";
-import { publishModZip, readStoredBlob } from "@/lib/store";
+import { deleteStoredBlob, publishModZip, readStoredBlob } from "@/lib/store";
 import { inspectZipBuffer } from "@/lib/zip";
 
 const VT_BASE = "https://www.virustotal.com/api/v3";
@@ -186,7 +185,7 @@ export async function scanVersion(modId: string, version: string): Promise<void>
 
     if (!(await getVersion(modId, version))) {
       try {
-        await del(row.blobPath);
+        await deleteStoredBlob(row.blobPath);
       } catch {
         // Quarantine copy may already be gone.
       }
@@ -197,12 +196,12 @@ export async function scanVersion(modId: string, version: string): Promise<void>
     const copied = await publishModZip(row.blobPath, publicPath);
     if (!(await getVersion(modId, version))) {
       try {
-        await del(publicPath);
+        await deleteStoredBlob(publicPath);
       } catch {
         // Public copy may not exist if copy was a no-op.
       }
       try {
-        await del(row.blobPath);
+        await deleteStoredBlob(row.blobPath);
       } catch {
         // Quarantine copy may already be gone.
       }
@@ -218,7 +217,7 @@ export async function scanVersion(modId: string, version: string): Promise<void>
       vtId: sha256,
     });
     try {
-      await del(row.blobPath);
+      await deleteStoredBlob(row.blobPath);
     } catch {
       // Keep quarantine copy if delete fails; public copy is live.
     }

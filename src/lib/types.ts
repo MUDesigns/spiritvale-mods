@@ -1,4 +1,5 @@
 import { trackedModDownloadUrl } from "@/lib/downloads";
+import { catalogDisplayTitle } from "@/lib/format";
 
 export type CatalogArtifact = {
   filename: string;
@@ -85,7 +86,7 @@ export function emptyCatalog(): Catalog {
 export function publicModSummary(mod: Pick<CatalogMod, keyof PublicModSummary>): PublicModSummary {
   return {
     id: mod.id,
-    name: mod.name,
+    name: catalogDisplayTitle(mod.name, mod.filename),
     description: mod.description ?? "",
     latestVersion: mod.latestVersion,
     changelog: mod.changelog ?? "",

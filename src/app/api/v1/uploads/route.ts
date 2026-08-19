@@ -1,9 +1,9 @@
-import { generateClientTokenFromReadWriteToken } from "@vercel/blob/client";
 import { getModOwner } from "@/lib/catalog";
 import { COMMUNITY_MAX_BYTES } from "@/lib/constants";
 import { isCatalogId, isVersion, isZipFilename, safeFilename } from "@/lib/ids";
 import { communityReady, requireApiKey } from "@/lib/user-auth";
 import { consumeUserRateLimit } from "@/lib/rate-limit";
+import { issueUpload, requestOrigin } from "@/lib/upload-token";
 
 export const dynamic = "force-dynamic";
 
@@ -44,24 +44,12 @@ export async function POST(request: Request) {
   }
 
   const pathname = `quarantine/${user.userId}/${crypto.randomUUID()}/${filename}`;
-  const validUntil = Date.now() + 60 * 60 * 1000;
-  const clientToken = await generateClientTokenFromReadWriteToken({
-    pathname,
-    maximumSizeInBytes: COMMUNITY_MAX_BYTES,
-    allowedContentTypes: [
-      "application/zip",
-      "application/x-zip-compressed",
-      "application/octet-stream",
-    ],
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    validUntil,
-  });
-
-  return Response.json({
-    pathname,
-    clientToken,
-    validUntil,
-    maximumSizeInBytes: COMMUNITY_MAX_BYTES,
-  });
+  return Response.json(
+    issueUpload({
+      pathname,
+      maxBytes: COMMUNITY_MAX_BYTES,
+      userId: user.userId,
+      origin: requestOrigin(request),
+    }),
+  );
 }

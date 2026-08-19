@@ -1,5 +1,6 @@
 export const COMMUNITY_MAX_BYTES = 50 * 1024 * 1024;
 export const IMAGE_MAX_BYTES = 8 * 1024 * 1024;
+export const APP_MAX_BYTES = 512 * 1024 * 1024;
 export const MAX_IMAGES_PER_MOD = 16;
 export const IMAGE_CONTENT_TYPES = [
   "image/jpeg",

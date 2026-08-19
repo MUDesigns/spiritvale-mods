@@ -124,7 +124,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       : "Upload mods after a virus scan. Google, Discord, or email.";
 
   return (
-    <div className="panel w-full max-w-md p-8">
+    <div className="panel w-full max-w-md p-5 sm:p-8">
       <h1 className="text-2xl font-extrabold text-[#f4f7fb]">{title}</h1>
       <p className="mt-2 text-sm text-[#9aa3b8]">{subtitle}</p>
 

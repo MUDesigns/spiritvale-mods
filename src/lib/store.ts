@@ -1,113 +1,184 @@
-import { copy, del, get, list, put } from "@vercel/blob";
+import { createReadStream, createWriteStream } from "node:fs";
+import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { pipeline } from "node:stream/promises";
+import { once } from "node:events";
+import { SITE_URL } from "@/lib/constants";
+import { sanitizePublicFilePath, sanitizeStoredPathname } from "@/lib/ids";
 import { emptyCatalog, type Catalog } from "./types";
 
 const CATALOG_PATH = "catalog.json";
 
-export async function loadCatalogFromBlob(): Promise<Catalog> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return emptyCatalog();
-  }
+export type StoredFile = {
+  pathname: string;
+  url: string;
+  downloadUrl: string;
+  sizeBytes: number;
+};
 
-  const { blobs } = await list({ prefix: CATALOG_PATH, limit: 20 });
-  const hit = blobs.find((blob) => blob.pathname === CATALOG_PATH);
-  if (!hit) {
-    return emptyCatalog();
-  }
+export function storageRoot(): string {
+  return process.env.STORAGE_DIR?.trim() || path.join(process.cwd(), "data", "storage");
+}
 
-  const response = await fetch(hit.url, { cache: "no-store" });
-  if (!response.ok) {
-    return emptyCatalog();
+export function publicFileUrl(pathname: string): string {
+  const encoded = pathname
+    .split("/")
+    .filter(Boolean)
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  return `${SITE_URL.replace(/\/$/, "")}/files/${encoded}`;
+}
+
+export function absoluteStoragePath(pathname: string): string {
+  const safe = sanitizeStoredPathname(pathname);
+  if (!safe) {
+    throw new Error("Invalid storage path.");
   }
-  const data = (await response.json()) as Catalog;
+  return path.join(storageRoot(), ...safe.split("/"));
+}
+
+async function ensureParent(filePath: string): Promise<void> {
+  await mkdir(path.dirname(filePath), { recursive: true });
+}
+
+export async function putStoredFile(
+  pathname: string,
+  body: Buffer | Uint8Array | string,
+): Promise<StoredFile> {
+  const safe = sanitizeStoredPathname(pathname);
+  if (!safe) throw new Error("Invalid storage path.");
+  const dest = path.join(storageRoot(), ...safe.split("/"));
+  await ensureParent(dest);
+  const bytes = typeof body === "string" ? Buffer.from(body) : Buffer.from(body);
+  await writeFile(dest, bytes);
   return {
-    mods: data.mods ?? {},
-    app: data.app ?? null,
+    pathname: safe,
+    url: publicFileUrl(safe),
+    downloadUrl: publicFileUrl(safe),
+    sizeBytes: bytes.length,
   };
 }
 
+export async function writeStoredStream(
+  pathname: string,
+  stream: AsyncIterable<Buffer | Uint8Array>,
+  maxBytes: number,
+): Promise<StoredFile> {
+  const safe = sanitizeStoredPathname(pathname);
+  if (!safe) throw new Error("Invalid storage path.");
+  const dest = path.join(storageRoot(), ...safe.split("/"));
+  await ensureParent(dest);
+  const temp = `${dest}.${process.pid}.${Date.now()}.part`;
+  const out = createWriteStream(temp);
+  let sizeBytes = 0;
+  try {
+    for await (const chunk of stream) {
+      const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      sizeBytes += buf.length;
+      if (sizeBytes > maxBytes) {
+        throw new Error(`Upload exceeds ${maxBytes} bytes.`);
+      }
+      if (!out.write(buf)) {
+        await once(out, "drain");
+      }
+    }
+    await new Promise<void>((resolve, reject) => {
+      out.end((error: NodeJS.ErrnoException | null) => (error ? reject(error) : resolve()));
+    });
+    if (sizeBytes === 0) {
+      throw new Error("Empty upload body.");
+    }
+    await rename(temp, dest);
+  } catch (error) {
+    out.destroy();
+    await rm(temp, { force: true }).catch(() => undefined);
+    throw error;
+  }
+  return {
+    pathname: safe,
+    url: publicFileUrl(safe),
+    downloadUrl: publicFileUrl(safe),
+    sizeBytes,
+  };
+}
+
+export async function loadCatalogFromBlob(): Promise<Catalog> {
+  try {
+    const dest = absoluteStoragePath(CATALOG_PATH);
+    const raw = await readFile(dest, "utf8");
+    const data = JSON.parse(raw) as Catalog;
+    return {
+      mods: data.mods ?? {},
+      app: data.app ?? null,
+    };
+  } catch {
+    return emptyCatalog();
+  }
+}
+
 export async function saveCatalog(catalog: Catalog): Promise<void> {
-  await put(CATALOG_PATH, JSON.stringify(catalog, null, 2), {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json",
-    cacheControlMaxAge: 0,
-  });
+  await putStoredFile(CATALOG_PATH, JSON.stringify(catalog, null, 2));
 }
 
 export async function deleteStoredBlob(pathname: string): Promise<void> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN || !pathname) return;
+  if (!pathname) return;
   try {
-    await del(pathname);
+    await rm(absoluteStoragePath(pathname), { force: true });
   } catch {
-    // Blob may already be gone (quarantine copy cleaned after scan).
+    // File may already be gone.
   }
 }
 
-export async function publishModZip(sourcePath: string, publicPath: string) {
-  return copy(sourcePath, publicPath, {
-    access: "public",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/zip",
-  });
-}
-
-async function streamToBuffer(stream: ReadableStream<Uint8Array>): Promise<Buffer> {
-  const chunks: Buffer[] = [];
-  const reader = stream.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(Buffer.from(value));
-  }
-  return Buffer.concat(chunks);
-}
-
-function blobAccessFromUrl(url: string): "public" | "private" {
-  return url.includes(".private.blob.vercel-storage.com") ? "private" : "public";
+export async function publishModZip(sourcePath: string, publicPath: string): Promise<StoredFile> {
+  const from = absoluteStoragePath(sourcePath);
+  const to = absoluteStoragePath(publicPath);
+  await ensureParent(to);
+  await pipeline(createReadStream(from), createWriteStream(to));
+  const info = await stat(to);
+  const safe = sanitizeStoredPathname(publicPath)!;
+  return {
+    pathname: safe,
+    url: publicFileUrl(safe),
+    downloadUrl: publicFileUrl(safe),
+    sizeBytes: info.size,
+  };
 }
 
 export async function readStoredBlob(
   pathname: string,
   downloadUrl?: string | null,
 ): Promise<Buffer> {
-  const attempts: Array<{ urlOrPath: string; access: "public" | "private" }> = [];
-  if (downloadUrl?.startsWith("http")) {
-    attempts.push({ urlOrPath: downloadUrl, access: blobAccessFromUrl(downloadUrl) });
-  }
-  attempts.push({ urlOrPath: pathname, access: "public" });
-  attempts.push({ urlOrPath: pathname, access: "private" });
-
-  const seen = new Set<string>();
-  let lastError: unknown;
-  for (const attempt of attempts) {
-    const key = `${attempt.access}:${attempt.urlOrPath}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    try {
-      if (attempt.access === "public" && attempt.urlOrPath.startsWith("http")) {
-        const response = await fetch(attempt.urlOrPath);
-        if (response.ok) {
-          return Buffer.from(await response.arrayBuffer());
-        }
-        lastError = new Error(`HTTP ${response.status} ${response.statusText}`);
-        continue;
+  try {
+    return await readFile(absoluteStoragePath(pathname));
+  } catch {
+    if (downloadUrl?.startsWith("http")) {
+      const response = await fetch(downloadUrl);
+      if (response.ok) {
+        return Buffer.from(await response.arrayBuffer());
       }
-      const result = await get(attempt.urlOrPath, {
-        access: attempt.access,
-        ...(attempt.access === "private" ? { useCache: false } : {}),
-      });
-      if (!result?.stream) {
-        lastError = new Error("Quarantine blob was not found.");
-        continue;
-      }
-      return await streamToBuffer(result.stream);
-    } catch (error) {
-      lastError = error;
     }
+    throw new Error("Stored file was not found.");
   }
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("Quarantine blob was not found.");
+}
+
+export function contentTypeFor(pathname: string): string {
+  const lower = pathname.toLowerCase();
+  if (lower.endsWith(".zip")) return "application/zip";
+  if (lower.endsWith(".png")) return "image/png";
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".gif")) return "image/gif";
+  if (lower.endsWith(".json")) return "application/json";
+  if (lower.endsWith(".exe")) return "application/octet-stream";
+  return "application/octet-stream";
+}
+
+export function isPublicStoragePath(pathname: string): boolean {
+  return Boolean(sanitizePublicFilePath(pathname));
+}
+
+export function publicDiskPath(pathname: string): string | null {
+  const safe = sanitizePublicFilePath(pathname);
+  if (!safe) return null;
+  return path.join(storageRoot(), ...safe.split("/"));
 }
