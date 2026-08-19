@@ -1,5 +1,5 @@
 import { APP_MAX_BYTES } from "@/lib/constants";
-import { requirePublishToken } from "@/lib/auth";
+import { requirePublisher } from "@/lib/auth";
 import { sanitizeStoredPathname } from "@/lib/ids";
 import { issueUpload, requestOrigin } from "@/lib/upload-token";
 
@@ -11,7 +11,7 @@ type UploadBody = {
 };
 
 export async function POST(request: Request) {
-  const denied = requirePublishToken(request);
+  const denied = await requirePublisher(request);
   if (denied) return denied;
 
   const body = (await request.json()) as UploadBody;

@@ -1,3 +1,4 @@
+import { isCatalogAdmin } from "@/lib/admin";
 import { getModOwner } from "@/lib/catalog";
 import { COMMUNITY_MAX_BYTES } from "@/lib/constants";
 import { isCatalogId, isVersion, isZipFilename, safeFilename } from "@/lib/ids";
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
   }
 
   const owner = await getModOwner(id);
-  if (owner === null) {
+  if (owner === null && !(await isCatalogAdmin(user.userId))) {
     return Response.json(
       { error: "This catalog id is reserved and cannot be claimed." },
       { status: 403 },

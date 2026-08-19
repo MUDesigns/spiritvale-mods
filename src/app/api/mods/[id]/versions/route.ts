@@ -1,4 +1,4 @@
-import { requirePublishToken } from "@/lib/auth";
+import { requirePublisher } from "@/lib/auth";
 import { upsertLiveModVersion } from "@/lib/catalog";
 import { isCatalogId, isVersion, safeFilename, sanitizeDescription } from "@/lib/ids";
 
@@ -19,7 +19,7 @@ export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const denied = requirePublishToken(request);
+  const denied = await requirePublisher(request);
   if (denied) return denied;
 
   const { id } = await context.params;

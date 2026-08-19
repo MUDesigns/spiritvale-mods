@@ -1,4 +1,4 @@
-import { requirePublishToken } from "@/lib/auth";
+import { requirePublisher } from "@/lib/auth";
 import { upsertAppArtifact } from "@/lib/catalog";
 import { isVersion, safeFilename } from "@/lib/ids";
 
@@ -15,7 +15,7 @@ type AppVersionBody = {
 };
 
 export async function PUT(request: Request) {
-  const denied = requirePublishToken(request);
+  const denied = await requirePublisher(request);
   if (denied) return denied;
 
   const body = (await request.json()) as AppVersionBody;

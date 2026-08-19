@@ -1,5 +1,5 @@
 import { clerkUserIdForEmail } from "@/lib/admin";
-import { requirePublishToken } from "@/lib/auth";
+import { requirePublisher } from "@/lib/auth";
 import { isCatalogId } from "@/lib/ids";
 import { setModOwner, writeResultResponse } from "@/lib/catalog";
 import { requireAdminSession } from "@/lib/user-auth";
@@ -7,7 +7,7 @@ import { requireAdminSession } from "@/lib/user-auth";
 export const dynamic = "force-dynamic";
 
 async function requireAdminOrPublisher(request: Request) {
-  if (!requirePublishToken(request)) return { ok: true as const };
+  if (!(await requirePublisher(request))) return { ok: true as const };
   const user = await requireAdminSession();
   if (user instanceof Response) return user;
   return { ok: true as const };

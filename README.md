@@ -14,7 +14,7 @@ Unauthenticated:
 - `GET /api/app` — latest Mod Manager installer/portable
 - `GET /files/{pathname}` — public files (`mods/…`, `app/…`, images). Quarantine is not served.
 
-Authenticated (`Authorization: Bearer $PUBLISH_TOKEN`):
+Authenticated (`Authorization: Bearer $PUBLISH_TOKEN`, or a catalog-admin `svm_` API key):
 
 - `POST /api/upload` — `{ pathname, contentType }` → `{ clientToken, uploadUrl, pathname }` for a catalog PUT
 - `PUT /api/upload/blob?pathname=…` — stream the file to disk (Bearer `clientToken`, max 512 MB)
