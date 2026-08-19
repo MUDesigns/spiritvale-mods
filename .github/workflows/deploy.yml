@@ -75,11 +75,11 @@ jobs:
             echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
             sudo docker pull "$IMAGE"
             sudo cp /tmp/docker-compose.yml /opt/spiritvale-mods/docker-compose.yml
-            IMAGE="$IMAGE" sudo -E python3 - <<'PY'
+            sudo python3 - "$IMAGE" <<'PY'
             from pathlib import Path
-            import os
+            import sys
             path = Path("/opt/spiritvale-mods/.env")
-            image = os.environ["IMAGE"]
+            image = sys.argv[1]
             lines = path.read_text().splitlines()
             out = []
             found = False
