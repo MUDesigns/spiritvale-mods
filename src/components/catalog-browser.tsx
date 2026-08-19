@@ -231,7 +231,10 @@ function ModIdentity({
         <Link href={`/mods/${mod.id}`} className="font-extrabold hover:text-[#55b7ea]">
           {catalogDisplayTitle(mod.name, mod.filename)}
         </Link>
-        <p className="mt-0.5 font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
+        <p className="mt-0.5 font-mono text-xs text-[#9aa3b8]">
+          {mod.id}
+          {mod.author ? ` · ${mod.author}` : ""}
+        </p>
         {mod.description ? (
           <p className="catalog-mod-excerpt mt-1 text-sm text-[#9aa3b8]">
             {excerpt(mod.description, excerptLength)}

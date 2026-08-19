@@ -44,6 +44,7 @@ export default async function ModPage({
                 {catalogDisplayTitle(mod.name, mod.filename)}
               </h1>
               <p className="mt-2 text-sm text-[#9aa3b8]">
+                {mod.author ? `${mod.author} · ` : ""}
                 v{mod.latestVersion} · {formatBytes(mod.sizeBytes)} ·{" "}
                 {formatDownloads(mod.downloadCount)} · Updated {formatDate(mod.publishedAt)}
               </p>

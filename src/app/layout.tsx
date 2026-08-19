@@ -6,6 +6,8 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { currentIsAdmin } from "@/lib/admin";
 import { clerkAppearance, CLERK_TASK_URLS } from "@/lib/clerk-options";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { DISCORD_INVITE_URL } from "@/lib/discord";
 import "./globals.css";
 
 const nunito = Nunito({
@@ -37,8 +39,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const isAdmin = publishableKey ? await currentIsAdmin() : false;
   const body = (
     <>
-      <SiteHeader clerkEnabled={Boolean(publishableKey)} isAdmin={isAdmin} />
-      {children}
+      <SiteHeader
+        clerkEnabled={Boolean(publishableKey)}
+        isAdmin={isAdmin}
+        discordInvite={DISCORD_INVITE_URL}
+      />
+      <div className="flex-1">{children}</div>
+      <SiteFooter />
     </>
   );
 
@@ -47,7 +54,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${nunito.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className={`${nunito.className} min-h-full bg-background text-foreground`}>
+      <body className={`${nunito.className} flex min-h-full flex-col bg-background text-foreground`}>
         {publishableKey ? (
           <ClerkProvider
             publishableKey={publishableKey}

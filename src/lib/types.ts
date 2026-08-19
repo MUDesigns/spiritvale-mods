@@ -38,6 +38,7 @@ export type CatalogMod = {
   publishedAt: string;
   downloadCount?: number;
   thumbnailUrl?: string;
+  author?: string;
   images?: CatalogModImage[];
   versions: CatalogVersion[];
 };
@@ -55,6 +56,7 @@ export type PublicModSummary = {
   publishedAt: string;
   downloadCount: number;
   thumbnailUrl?: string;
+  author?: string;
 };
 
 export type CatalogSort = "name" | "newest" | "oldest" | "size" | "downloads";
@@ -97,6 +99,7 @@ export function publicModSummary(mod: Pick<CatalogMod, keyof PublicModSummary>):
     publishedAt: mod.publishedAt,
     downloadCount: mod.downloadCount ?? 0,
     thumbnailUrl: mod.thumbnailUrl,
+    author: mod.author,
   };
 }
 

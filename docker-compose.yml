@@ -64,6 +64,9 @@ services:
       ADMIN_ALERT_EMAIL: ${ADMIN_ALERT_EMAIL:-matt03803@gmail.com}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-matt03803@gmail.com}
       CRON_SECRET: ${CRON_SECRET}
+      DISCORD_BOT_URL: ${DISCORD_BOT_URL:-http://bot:8080}
+      DISCORD_BOT_SECRET: ${DISCORD_BOT_SECRET}
+      DISCORD_INVITE_URL: ${DISCORD_INVITE_URL:-https://discord.gg/WmKSvZmhwT}
     volumes:
       - catalog_storage:/data/storage
     mem_limit: 768m
@@ -114,9 +117,37 @@ services:
       - traefik.http.routers.spiritvale-http.service=spiritvale
       - traefik.http.services.spiritvale.loadbalancer.server.port=3000
 
+  bot:
+    image: ${BOT_IMAGE:-ghcr.io/mudesigns/spiritvale-mods-discord-bot:latest}
+    restart: unless-stopped
+    environment:
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_BOT_SECRET: ${DISCORD_BOT_SECRET}
+      GUILD_ID: "1539654257534312481"
+      PRIVILEGED_INTENTS: "1"
+      SITE_URL: ${SITE_URL:-https://www.spiritvalemods.com}
+      CATALOG_URL: "${SITE_URL:-https://www.spiritvalemods.com}/api/catalog"
+      CATALOG_POLL_MINUTES: "3"
+      BOT_DATA_DIR: /data
+      AUTO_DEPLOY_LAYOUT: "0"
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: "8080"
+    volumes:
+      - bot_data:/data
+    mem_limit: 256m
+    networks:
+      - default
+      - dokploy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   catalog_storage:
+  bot_data:
 
 networks:
   dokploy:

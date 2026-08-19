@@ -24,6 +24,7 @@ import type {
   PublicModSummary,
 } from "@/lib/types";
 import { publicModSummary } from "@/lib/types";
+import { authorNamesByUserId } from "@/lib/authors";
 
 export { hasDatabase };
 
@@ -175,6 +176,14 @@ async function loadCatalogFromDb(): Promise<Catalog> {
         publishedAt: asIso(item.publishedAt),
       })),
     };
+  }
+
+  const ownerIds = modRows.map((mod) => mod.ownerUserId).filter((id): id is string => Boolean(id));
+  const authors = await authorNamesByUserId(ownerIds);
+  for (const mod of modRows) {
+    if (mod.ownerUserId && catalogMods[mod.id]) {
+      catalogMods[mod.id].author = authors.get(mod.ownerUserId);
+    }
   }
 
   const appRow = appRows[0];
@@ -711,6 +720,7 @@ function asSummary(row: Record<string, unknown>): PublicModSummary {
     publishedAt: asIso(field(row, "publishedAt") as Date | string),
     downloadCount: Number(field(row, "downloadCount") ?? 0),
     thumbnailUrl: (field(row, "thumbnailUrl") as string | null | undefined) || undefined,
+    author: (field(row, "author") as string | null | undefined) || undefined,
   });
 }
 
@@ -788,7 +798,8 @@ export async function queryPublicMods(input: {
         l.download_url AS "downloadUrl",
         l.published_at AS "publishedAt",
         COALESCE(m.download_count, 0) AS "downloadCount",
-        ti.url AS "thumbnailUrl"
+        ti.url AS "thumbnailUrl",
+        m.owner_user_id AS "ownerUserId"
       FROM mods m
       INNER JOIN latest l ON l.mod_id = m.id
       LEFT JOIN LATERAL (
@@ -811,8 +822,18 @@ export async function queryPublicMods(input: {
   )) as Array<Record<string, unknown>>;
 
   const total = Number(field(rows[0] ?? {}, "total") ?? 0);
+  const ownerIds = rows
+    .map((row) => String(field(row, "ownerUserId") ?? ""))
+    .filter(Boolean);
+  const authors = await authorNamesByUserId(ownerIds);
   return {
-    mods: rows.map(asSummary),
+    mods: rows.map((row) => {
+      const ownerId = String(field(row, "ownerUserId") ?? "");
+      return asSummary({
+        ...row,
+        author: ownerId ? authors.get(ownerId) : undefined,
+      });
+    }),
     total,
     page,
     pageSize,
@@ -1171,5 +1192,11 @@ export async function promoteVersionToLive(
   if (row.blobPath !== blobPath) {
     await deleteStoredBlob(row.blobPath);
   }
+  const { notifyModLive } = await import("@/lib/discord-bridge");
+  await notifyModLive({
+    modId: id,
+    version,
+    ownerUserId: row.uploaderUserId,
+  });
   return { ok: true };
 }

@@ -126,6 +126,8 @@ The catalog image bakes `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` at **build** time. P
 
 Keep local `.env.local` on `pk_test_` / `sk_test_` so `next dev` stays on the development instance.
 
+The Discord bot is the `bot` service in this compose file (`ghcr.io/mudesigns/spiritvale-mods-discord-bot`). GitHub secrets `DISCORD_TOKEN` and `DISCORD_BOT_SECRET` are written onto the VPS `.env` the same way as `CLERK_SECRET_KEY`. The website calls `http://bot:8080/internal/event` for scan queue alerts and instant release posts.
+
 ## 9. Aftercare
 
 - Keep Clerk, VirusTotal, and Resend env vars as they are.

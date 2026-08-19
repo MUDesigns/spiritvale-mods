@@ -320,9 +320,19 @@ body {
   min-height: 44px;
 }
 
-.site-header {
-  border-bottom: 1px solid var(--line);
+.site-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
   background: #171b28;
+}
+
+.site-footer-inner {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1.25rem 1rem 2rem;
+  color: #9aa3b8;
+  font-size: 0.875rem;
+  font-weight: 700;
 }
 
 .site-header-inner {

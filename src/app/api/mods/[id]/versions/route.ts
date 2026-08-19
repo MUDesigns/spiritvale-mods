@@ -62,5 +62,7 @@ export async function PUT(
     sizeBytes,
     downloadUrl,
   });
+  const { notifyModLive } = await import("@/lib/discord-bridge");
+  await notifyModLive({ modId: id, version, name });
   return Response.json(next);
 }

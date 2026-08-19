@@ -1,7 +1,7 @@
 "use client";
 
 import { useClerk, useReverification, useUser } from "@clerk/nextjs";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { clerkErrorText } from "@/lib/clerk-ui";
 import { USERNAME_MAX, USERNAME_MIN } from "@/lib/clerk-options";
 import { ApiKeysPanel } from "@/components/api-keys-panel";
@@ -30,6 +30,16 @@ export function AccountPanel() {
         signOutOfOtherSessions: true,
       }),
   );
+
+  useEffect(() => {
+    const connected = user?.externalAccounts.some(
+      (account) =>
+        (account.provider === "discord" || account.provider === "oauth_discord") &&
+        account.verification?.status === "verified",
+    );
+    if (!connected) return;
+    void fetch("/api/account/sync-discord", { method: "POST" });
+  }, [user]);
 
   if (!isLoaded) {
     return <p className="text-sm text-[#9aa3b8]">Loading account…</p>;
@@ -204,6 +214,10 @@ export function AccountPanel() {
 
       <section className="panel p-6">
         <h2 className="text-lg font-extrabold">Connected accounts</h2>
+        <p className="mt-1 text-sm text-[#9aa3b8]">
+          Connect Discord to get the Verified Modder role after you publish a live
+          mod.
+        </p>
         <ul className="mt-4 flex flex-col gap-3">
           {PROVIDERS.map((provider) => {
             const connected = signedInUser.externalAccounts.find(

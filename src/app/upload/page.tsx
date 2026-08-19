@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { UploadForm } from "./upload-form";
+import { DISCORD_INVITE_URL } from "@/lib/discord";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +15,12 @@ export default async function UploadPage() {
         <h1 className="text-2xl font-extrabold">Upload a mod</h1>
         <p className="mt-2 text-sm text-[#9aa3b8]">
           Zip only, 50 MB max. Your file stays private until VirusTotal reports it
-          clean. Add a description so people know what they are installing. Scripts
-          can use an{" "}
+          clean. Add a description so people know what they are installing. After it
+          goes live we post it in{" "}
+          <a href={DISCORD_INVITE_URL} className="font-bold text-[#55b7ea] hover:underline">
+            Discord
+          </a>
+          . Scripts can use an{" "}
           <a href="/account" className="font-bold text-[#55b7ea] hover:underline">
             API key
           </a>{" "}
@@ -30,7 +35,7 @@ export default async function UploadPage() {
         </p>
       </div>
       <div className="panel p-4 sm:p-6">
-        <UploadForm />
+        <UploadForm discordInvite={DISCORD_INVITE_URL} />
       </div>
     </main>
   );

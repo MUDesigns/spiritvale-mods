@@ -139,6 +139,14 @@ export async function scanVersion(modId: string, version: string): Promise<void>
       reason,
       vtUrl,
     });
+    const { notifyDiscord } = await import("@/lib/discord-bridge");
+    await notifyDiscord({
+      type: "scan.quarantined",
+      modId,
+      version,
+      name: row.filename,
+      reason,
+    });
   };
 
   try {
@@ -215,6 +223,12 @@ export async function scanVersion(modId: string, version: string): Promise<void>
       blobPath: publicPath,
       scanSummary: "VirusTotal clean (malicious=0, suspicious=0).",
       vtId: sha256,
+    });
+    const { notifyModLive } = await import("@/lib/discord-bridge");
+    await notifyModLive({
+      modId,
+      version,
+      ownerUserId: row.uploaderUserId,
     });
     try {
       await deleteStoredBlob(row.blobPath);

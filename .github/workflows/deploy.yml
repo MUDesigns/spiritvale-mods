@@ -69,17 +69,21 @@ jobs:
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
           PGADMIN_DEFAULT_EMAIL: ${{ vars.PGADMIN_DEFAULT_EMAIL }}
           PGADMIN_DEFAULT_PASSWORD: ${{ secrets.PGADMIN_DEFAULT_PASSWORD }}
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_BOT_SECRET: ${{ secrets.DISCORD_BOT_SECRET }}
+          BOT_IMAGE: ghcr.io/mudesigns/spiritvale-mods-discord-bot:latest
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: GHCR_TOKEN,GHCR_USER,IMAGE,NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,PGADMIN_DEFAULT_EMAIL,PGADMIN_DEFAULT_PASSWORD
+          envs: GHCR_TOKEN,GHCR_USER,IMAGE,NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,PGADMIN_DEFAULT_EMAIL,PGADMIN_DEFAULT_PASSWORD,DISCORD_TOKEN,DISCORD_BOT_SECRET,BOT_IMAGE
           script: |
             set -euo pipefail
             echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
             sudo docker pull "$IMAGE"
+            sudo docker pull "$BOT_IMAGE" || true
             sudo cp /tmp/docker-compose.yml /opt/spiritvale-mods/docker-compose.yml
-            sudo python3 - "$IMAGE" "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" "$CLERK_SECRET_KEY" "$PGADMIN_DEFAULT_EMAIL" "$PGADMIN_DEFAULT_PASSWORD" <<'PY'
+            sudo python3 - "$IMAGE" "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" "$CLERK_SECRET_KEY" "$PGADMIN_DEFAULT_EMAIL" "$PGADMIN_DEFAULT_PASSWORD" "$DISCORD_TOKEN" "$DISCORD_BOT_SECRET" "$BOT_IMAGE" <<'PY'
             from pathlib import Path
             import sys
             path = Path("/opt/spiritvale-mods/.env")
@@ -88,6 +92,9 @@ jobs:
             sk = sys.argv[3].strip() if len(sys.argv) > 3 else ""
             pg_email = sys.argv[4].strip() if len(sys.argv) > 4 else ""
             pg_password = sys.argv[5].strip() if len(sys.argv) > 5 else ""
+            discord_token = sys.argv[6].strip() if len(sys.argv) > 6 else ""
+            discord_secret = sys.argv[7].strip() if len(sys.argv) > 7 else ""
+            bot_image = sys.argv[8].strip() if len(sys.argv) > 8 else ""
             if pk:
                 updates["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"] = pk
             if sk:
@@ -96,6 +103,14 @@ jobs:
                 updates["PGADMIN_DEFAULT_EMAIL"] = pg_email
             if pg_password:
                 updates["PGADMIN_DEFAULT_PASSWORD"] = pg_password
+            if discord_token:
+                updates["DISCORD_TOKEN"] = discord_token
+            if discord_secret:
+                updates["DISCORD_BOT_SECRET"] = discord_secret
+            if bot_image:
+                updates["BOT_IMAGE"] = bot_image
+            updates["DISCORD_BOT_URL"] = "http://bot:8080"
+            updates["DISCORD_INVITE_URL"] = "https://discord.gg/WmKSvZmhwT"
             lines = path.read_text().splitlines() if path.exists() else []
             out = []
             seen = set()
@@ -123,6 +138,7 @@ jobs:
             cd /opt/spiritvale-mods
             sudo docker compose --env-file .env pull pgadmin || true
             sudo docker compose --env-file .env up -d --no-build pgadmin
+            sudo docker compose --env-file .env up -d --no-build bot || true
             sudo docker compose --env-file .env up -d --no-build --force-recreate web
             sudo docker logout ghcr.io >/dev/null
             code=000

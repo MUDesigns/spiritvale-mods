@@ -1,6 +1,7 @@
 import { loadCatalog, queryPublicMods } from "@/lib/catalog";
 import { CatalogBrowser } from "@/components/catalog-browser";
 import { formatBytes } from "@/lib/format";
+import { DISCORD_INVITE_URL } from "@/lib/discord";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,12 @@ export default async function Home() {
           <p className="max-w-2xl text-[#9aa3b8]">
             Download mods here and send them to SpiritVale Mod Manager with
             Install, or import zips yourself. Signed-in users can upload; they go
-            live after a clean virus scan.
+            live after a clean virus scan. Chat, support, and release pings live
+            in the{" "}
+            <a href={DISCORD_INVITE_URL} className="font-bold text-[#55b7ea] hover:underline">
+              SpiritVale Mods Discord
+            </a>
+            .
           </p>
         </div>
       </header>

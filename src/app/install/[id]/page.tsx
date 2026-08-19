@@ -1,0 +1,49 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { loadCatalog } from "@/lib/catalog";
+import { catalogDisplayTitle } from "@/lib/format";
+import { isCatalogId } from "@/lib/ids";
+import { managerInstallUrl } from "@/lib/manager-protocol";
+import { LaunchManager } from "./launch-manager";
+
+export const dynamic = "force-dynamic";
+
+export default async function InstallPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  if (!isCatalogId(id)) notFound();
+  const catalog = await loadCatalog();
+  const mod = catalog.mods[id];
+  if (!mod) notFound();
+  const launchUrl = managerInstallUrl(id);
+
+  return (
+    <main className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-16 sm:px-6">
+      <LaunchManager url={launchUrl} />
+      <h1 className="text-2xl font-extrabold">Opening Mod Manager</h1>
+      <p className="text-[#9aa3b8]">
+        Your browser should ask to open SpiritVale Mod Manager and install{" "}
+        <strong className="text-[#f4f7fb]">{catalogDisplayTitle(mod.name, mod.filename)}</strong>
+        .
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <a className="btn btn-primary" href={launchUrl}>
+          Launch Mod Manager
+        </a>
+        <Link className="btn btn-secondary" href={`/mods/${id}`}>
+          Mod page
+        </Link>
+      </div>
+      <p className="text-xs text-[#9aa3b8]">
+        Need the app first? Get SpiritVale Mod Manager from the{" "}
+        <Link className="font-bold text-[#55b7ea] hover:underline" href="/">
+          catalog
+        </Link>
+        .
+      </p>
+    </main>
+  );
+}

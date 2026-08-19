@@ -102,6 +102,9 @@ export async function queueCommunityPublish(
     ownerUserId: userId,
   });
 
+  const { notifyDiscord } = await import("@/lib/discord-bridge");
+  await notifyDiscord({ type: "scan.queued", modId: id, version, name });
+
   return Response.json({
     id,
     version,

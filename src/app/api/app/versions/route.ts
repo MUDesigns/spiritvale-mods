@@ -52,5 +52,7 @@ export async function PUT(request: Request) {
     sizeBytes,
     downloadUrl,
   });
+  const { notifyDiscord } = await import("@/lib/discord-bridge");
+  await notifyDiscord({ type: "app.live", version, name: "SpiritVale Mod Manager" });
   return Response.json(next);
 }

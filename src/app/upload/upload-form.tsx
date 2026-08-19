@@ -14,7 +14,7 @@ async function sha256File(file: File): Promise<string> {
     .join("");
 }
 
-export function UploadForm() {
+export function UploadForm({ discordInvite }: { discordInvite: string }) {
   const { user } = useUser();
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +78,9 @@ export function UploadForm() {
       if (!response.ok) {
         throw new Error(json.error ?? "Publish failed.");
       }
-      setStatus(json.message ?? "Scanning. Check My mods for status.");
+      setStatus(
+        `${json.message ?? "Scanning. Check My mods for status."} Join Discord for release pings: ${discordInvite}`,
+      );
       form.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
@@ -131,9 +133,12 @@ export function UploadForm() {
       </label>
       <p className="text-xs font-semibold text-[#9aa3b8]">
         Files are scanned with VirusTotal before they appear in the catalog. A
-        clean result publishes automatically. Detections, scan errors, or unsafe
-        zips stay quarantined. Scanning is best-effort and not a substitute for
-        desktop antivirus.
+        clean result publishes automatically and is posted to{" "}
+        <a href={discordInvite} className="font-bold text-[#55b7ea] hover:underline">
+          Discord
+        </a>
+        . Detections, scan errors, or unsafe zips stay quarantined. Scanning is
+        best-effort and not a substitute for desktop antivirus.
       </p>
       {error ? <p className="text-sm text-[#e07a6d]">{error}</p> : null}
       {status ? <p className="text-sm text-[#55b7ea]">{status}</p> : null}
