@@ -16,6 +16,30 @@ services:
       timeout: 5s
       retries: 12
 
+  pgadmin:
+    image: dpage/pgadmin4:8
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-matt03803@gmail.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-changeme}
+      PGADMIN_DISABLE_POSTFIX: "true"
+    mem_limit: 256m
+    networks:
+      - default
+      - dokploy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=dokploy-network
+      - traefik.http.routers.spiritvale-pgadmin.rule=Host(`pgadmin.spiritvalemods.com`)
+      - traefik.http.routers.spiritvale-pgadmin.entrypoints=websecure
+      - traefik.http.routers.spiritvale-pgadmin.tls=true
+      - traefik.http.routers.spiritvale-pgadmin.tls.certresolver=letsencrypt
+      - traefik.http.routers.spiritvale-pgadmin.service=spiritvale-pgadmin
+      - traefik.http.services.spiritvale-pgadmin.loadbalancer.server.port=80
+
   web:
     image: ${WEB_IMAGE:-spiritvale-mods:latest}
     build: .

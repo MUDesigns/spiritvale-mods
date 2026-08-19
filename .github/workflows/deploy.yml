@@ -67,27 +67,35 @@ jobs:
           IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
           CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          PGADMIN_DEFAULT_EMAIL: ${{ vars.PGADMIN_DEFAULT_EMAIL }}
+          PGADMIN_DEFAULT_PASSWORD: ${{ secrets.PGADMIN_DEFAULT_PASSWORD }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: GHCR_TOKEN,GHCR_USER,IMAGE,NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY
+          envs: GHCR_TOKEN,GHCR_USER,IMAGE,NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,CLERK_SECRET_KEY,PGADMIN_DEFAULT_EMAIL,PGADMIN_DEFAULT_PASSWORD
           script: |
             set -euo pipefail
             echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
             sudo docker pull "$IMAGE"
             sudo cp /tmp/docker-compose.yml /opt/spiritvale-mods/docker-compose.yml
-            sudo python3 - "$IMAGE" "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" "$CLERK_SECRET_KEY" <<'PY'
+            sudo python3 - "$IMAGE" "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" "$CLERK_SECRET_KEY" "$PGADMIN_DEFAULT_EMAIL" "$PGADMIN_DEFAULT_PASSWORD" <<'PY'
             from pathlib import Path
             import sys
             path = Path("/opt/spiritvale-mods/.env")
             updates = {"WEB_IMAGE": sys.argv[1]}
             pk = sys.argv[2].strip() if len(sys.argv) > 2 else ""
             sk = sys.argv[3].strip() if len(sys.argv) > 3 else ""
+            pg_email = sys.argv[4].strip() if len(sys.argv) > 4 else ""
+            pg_password = sys.argv[5].strip() if len(sys.argv) > 5 else ""
             if pk:
                 updates["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"] = pk
             if sk:
                 updates["CLERK_SECRET_KEY"] = sk
+            if pg_email:
+                updates["PGADMIN_DEFAULT_EMAIL"] = pg_email
+            if pg_password:
+                updates["PGADMIN_DEFAULT_PASSWORD"] = pg_password
             lines = path.read_text().splitlines() if path.exists() else []
             out = []
             seen = set()
@@ -108,7 +116,13 @@ jobs:
               echo "CLERK_SECRET_KEY was not written as a live key"
               exit 1
             fi
+            if ! sudo grep -q '^PGADMIN_DEFAULT_PASSWORD=.' /opt/spiritvale-mods/.env; then
+              echo "PGADMIN_DEFAULT_PASSWORD is missing from the host .env"
+              exit 1
+            fi
             cd /opt/spiritvale-mods
+            sudo docker compose --env-file .env pull pgadmin || true
+            sudo docker compose --env-file .env up -d --no-build pgadmin
             sudo docker compose --env-file .env up -d --no-build --force-recreate web
             sudo docker logout ghcr.io >/dev/null
             code=000
