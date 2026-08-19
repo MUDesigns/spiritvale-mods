@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 import { clerkErrorText, navigateAfterAuth, statusOf } from "@/lib/clerk-ui";
+import { USERNAME_MAX, USERNAME_MIN } from "@/lib/clerk-options";
 
 type Mode = "sign-in" | "sign-up";
 type OAuthStrategy = "oauth_google" | "oauth_discord";
@@ -16,6 +17,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const { signIn, fetchStatus: signInStatus } = useSignIn();
   const { signUp, fetchStatus: signUpStatus } = useSignUp();
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         }
       } else {
         const { error: passwordError } = await signIn.password({
-          emailAddress: email,
+          identifier: email,
           password,
         });
         if (passwordError) {
@@ -90,6 +92,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
     } else {
       const { error: passwordError } = await signUp.password({
         emailAddress: email,
+        username: username.trim(),
         password,
       });
       if (passwordError) {
@@ -118,7 +121,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const title = mode === "sign-in" ? "Sign in" : "Create an account";
   const subtitle =
     mode === "sign-in"
-      ? "Use email and password, Google, or Discord."
+      ? "Use email or username and password, Google, or Discord."
       : "Upload mods after a virus scan. Google, Discord, or email.";
 
   return (
@@ -163,16 +166,31 @@ export function AuthForm({ mode }: { mode: Mode }) {
         ) : (
           <>
             <label className="text-sm font-semibold text-[#f4f7fb]">
-              Email
+              {mode === "sign-in" ? "Email or username" : "Email"}
               <input
                 className={fieldClass}
-                type="email"
+                type={mode === "sign-in" ? "text" : "email"}
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 required
-                autoComplete="email"
+                autoComplete={mode === "sign-in" ? "username" : "email"}
               />
             </label>
+            {mode === "sign-up" ? (
+              <label className="text-sm font-semibold text-[#f4f7fb]">
+                Username
+                <input
+                  className={fieldClass}
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  required
+                  minLength={USERNAME_MIN}
+                  maxLength={USERNAME_MAX}
+                  autoComplete="username"
+                  placeholder="Letters, numbers, and underscores"
+                />
+              </label>
+            ) : null}
             <label className="text-sm font-semibold text-[#f4f7fb]">
               Password
               <input

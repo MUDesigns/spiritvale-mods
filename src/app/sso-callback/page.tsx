@@ -60,6 +60,11 @@ export default function SsoCallbackPage() {
         return;
       }
 
+      if (signUp.status === "missing_requirements") {
+        router.push("/sign-up/continue");
+        return;
+      }
+
       const sessionId = signIn.existingSession?.sessionId || signUp.existingSession?.sessionId;
       if (sessionId) {
         await clerk.setActive({

@@ -3,6 +3,7 @@
 import { useClerk, useReverification, useUser } from "@clerk/nextjs";
 import { type FormEvent, useState } from "react";
 import { clerkErrorText } from "@/lib/clerk-ui";
+import { USERNAME_MAX, USERNAME_MIN } from "@/lib/clerk-options";
 import { ApiKeysPanel } from "@/components/api-keys-panel";
 
 const PROVIDERS = [
@@ -14,6 +15,7 @@ export function AccountPanel() {
   const { isLoaded, isSignedIn, user } = useUser();
   const { signOut } = useClerk();
   const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -49,6 +51,10 @@ export function AccountPanel() {
     setError(null);
     setMessage(null);
     try {
+      const nextUsername = username.trim() || signedInUser.username || "";
+      if (nextUsername && nextUsername !== signedInUser.username) {
+        await signedInUser.update({ username: nextUsername });
+      }
       await signedInUser.updateMetadata({
         unsafeMetadata: { displayName: displayName.trim() || savedName },
       });
@@ -124,6 +130,19 @@ export function AccountPanel() {
           {signedInUser.primaryEmailAddress?.emailAddress ?? "No email on this account"}
         </p>
         <form onSubmit={saveProfile} className="mt-4 flex flex-col gap-3">
+          <label className="text-sm font-extrabold">
+            Username
+            <input
+              className="field mt-1"
+              defaultValue={signedInUser.username ?? ""}
+              onChange={(event) => setUsername(event.target.value)}
+              required
+              minLength={USERNAME_MIN}
+              maxLength={USERNAME_MAX}
+              autoComplete="username"
+              placeholder="Letters, numbers, and underscores"
+            />
+          </label>
           <label className="text-sm font-extrabold">
             Display name
             <input

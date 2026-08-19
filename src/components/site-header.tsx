@@ -72,6 +72,7 @@ function AuthLinks({ isAdmin, open }: { isAdmin: boolean; open: boolean }) {
     const label =
       (typeof user.unsafeMetadata.displayName === "string" &&
         user.unsafeMetadata.displayName) ||
+      user.username ||
       user.primaryEmailAddress?.emailAddress ||
       "Account";
     return (

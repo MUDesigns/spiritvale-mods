@@ -6,6 +6,9 @@ export const CLERK_TASK_URLS = {
   "choose-organization": CLERK_TASK_PATH,
 } as const;
 
+export const USERNAME_MIN = 4;
+export const USERNAME_MAX = 64;
+
 export const clerkAppearance = {
   variables: {
     colorPrimary: "#55b7ea",
