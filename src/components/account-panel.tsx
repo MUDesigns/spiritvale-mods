@@ -34,8 +34,7 @@ export function AccountPanel() {
   useEffect(() => {
     const connected = user?.externalAccounts.some(
       (account) =>
-        (account.provider === "discord" || account.provider === "oauth_discord") &&
-        account.verification?.status === "verified",
+        account.provider === "discord" && account.verification?.status === "verified",
     );
     if (!connected) return;
     void fetch("/api/account/sync-discord", { method: "POST" });
