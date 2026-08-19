@@ -77,14 +77,13 @@ jobs:
             echo "$GHCR_TOKEN" | sudo docker login ghcr.io -u "$GHCR_USER" --password-stdin
             sudo docker pull "$IMAGE"
             sudo cp /tmp/docker-compose.yml /opt/spiritvale-mods/docker-compose.yml
-            sudo -E python3 - "$IMAGE" <<'PY'
+            sudo python3 - "$IMAGE" "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" "$CLERK_SECRET_KEY" <<'PY'
             from pathlib import Path
-            import os
             import sys
             path = Path("/opt/spiritvale-mods/.env")
             updates = {"WEB_IMAGE": sys.argv[1]}
-            pk = os.environ.get("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "").strip()
-            sk = os.environ.get("CLERK_SECRET_KEY", "").strip()
+            pk = sys.argv[2].strip() if len(sys.argv) > 2 else ""
+            sk = sys.argv[3].strip() if len(sys.argv) > 3 else ""
             if pk:
                 updates["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"] = pk
             if sk:
@@ -105,6 +104,10 @@ jobs:
             path.write_text("\n".join(out) + "\n")
             PY
             sudo chmod 600 /opt/spiritvale-mods/.env
+            if ! sudo grep -q '^CLERK_SECRET_KEY=sk_live_' /opt/spiritvale-mods/.env; then
+              echo "CLERK_SECRET_KEY was not written as a live key"
+              exit 1
+            fi
             cd /opt/spiritvale-mods
             sudo docker compose --env-file .env up -d --no-build --force-recreate web
             sudo docker logout ghcr.io >/dev/null
