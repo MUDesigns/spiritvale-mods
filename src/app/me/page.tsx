@@ -1,9 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CatalogPauseNotice } from "@/components/catalog-pause-notice";
 import { ModImagesPanel } from "@/components/mod-images-panel";
 import { ModMetaForm } from "@/components/mod-meta-form";
 import { DeleteModButton, DeleteVersionButton } from "@/components/mod-owner-controls";
+import { isCatalogPaused } from "@/lib/catalog-pause";
 import { hasDatabase, listImagesByModIds, listUserMods } from "@/lib/catalog";
 import {
   formatBytes,
@@ -25,6 +27,7 @@ export default async function MePage() {
     );
   }
 
+  const paused = isCatalogPaused();
   const { owned, versions } = await listUserMods(userId);
   const imagesByMod = await listImagesByModIds(owned.map((mod) => mod.id));
 
@@ -33,12 +36,13 @@ export default async function MePage() {
       <div>
         <h1 className="text-2xl font-extrabold">My mods</h1>
         <p className="mt-2 text-sm text-[#9aa3b8]">
-          Live files appear on the public catalog. Scanning and quarantined
-          uploads are only visible here. You can edit the Nexus-style
-          description, remove an older file, delete a listing you uploaded, or
-          add screenshots and pick a thumbnail.
+          {paused
+            ? "The public catalog and new uploads are paused. Your private listings below are still visible to you only."
+            : "Live files appear on the public catalog. Scanning and quarantined uploads are only visible here. You can edit the Nexus-style description, remove an older file, delete a listing you uploaded, or add screenshots and pick a thumbnail."}
         </p>
       </div>
+
+      {paused ? <CatalogPauseNotice compact /> : null}
 
       {owned.length === 0 && versions.length === 0 ? (
         <p className="text-[#9aa3b8]">You have not uploaded any mods yet.</p>
@@ -72,9 +76,11 @@ export default async function MePage() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Link href="/upload" className="btn btn-secondary">
-                  Upload new version
-                </Link>
+                {!paused ? (
+                  <Link href="/upload" className="btn btn-secondary">
+                    Upload new version
+                  </Link>
+                ) : null}
                 <DeleteModButton id={mod.id} name={mod.name} />
               </div>
             </div>

@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { isCatalogAdmin } from "@/lib/admin";
 import { userIdFromApiKey } from "@/lib/api-keys";
 import { bearerToken, unauthorized } from "@/lib/auth";
+import { catalogPausedResponse, isCatalogPaused } from "@/lib/catalog-pause";
 import { hasDatabase } from "@/lib/catalog";
 import { hasClerk } from "@/lib/clerk";
 
@@ -42,6 +43,7 @@ export async function requireCatalogUser(request: Request): Promise<CatalogUser 
 }
 
 export function communityReady(): Response | null {
+  if (isCatalogPaused()) return catalogPausedResponse();
   if (!hasClerk() || !hasDatabase()) {
     return Response.json(
       { error: "Community uploads require Clerk and DATABASE_URL." },

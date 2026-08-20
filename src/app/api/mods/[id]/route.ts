@@ -1,3 +1,4 @@
+import { catalogPausedResponse, isCatalogPaused } from "@/lib/catalog-pause";
 import { loadCatalog } from "@/lib/catalog";
 import { isCatalogId } from "@/lib/ids";
 import { publicMod } from "@/lib/types";
@@ -8,6 +9,7 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  if (isCatalogPaused()) return catalogPausedResponse();
   const { id } = await context.params;
   if (!isCatalogId(id)) {
     return Response.json({ error: "Invalid mod id." }, { status: 400 });

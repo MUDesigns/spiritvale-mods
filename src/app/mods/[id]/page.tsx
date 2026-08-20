@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CatalogPauseNotice } from "@/components/catalog-pause-notice";
 import { loadCatalog } from "@/lib/catalog";
+import { isCatalogPaused } from "@/lib/catalog-pause";
 import { catalogDisplayTitle, formatBytes, formatDate, formatDownloads } from "@/lib/format";
 import { InstallWithManagerButton } from "@/components/install-with-manager";
 import { ModGallery } from "@/components/mod-gallery";
@@ -16,6 +18,18 @@ export default async function ModPage({
 }) {
   const { id } = await params;
   if (!isCatalogId(id)) notFound();
+
+  if (isCatalogPaused()) {
+    return (
+      <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+        <Link href="/" className="text-sm font-extrabold text-[#55b7ea]">
+          ← Back to home
+        </Link>
+        <CatalogPauseNotice compact />
+      </main>
+    );
+  }
+
   const catalog = await loadCatalog();
   const raw = catalog.mods[id];
   if (!raw) notFound();
@@ -40,7 +54,7 @@ export default async function ModPage({
             ) : null}
             <div className="min-w-0">
               <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
-            <h1 className="mt-1 text-2xl font-extrabold sm:text-3xl">
+              <h1 className="mt-1 text-2xl font-extrabold sm:text-3xl">
                 {catalogDisplayTitle(mod.name, mod.filename)}
               </h1>
               <p className="mt-2 text-sm text-[#9aa3b8]">

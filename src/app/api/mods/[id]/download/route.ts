@@ -1,3 +1,4 @@
+import { catalogPausedResponse, isCatalogPaused } from "@/lib/catalog-pause";
 import { resolveModDownload } from "@/lib/catalog";
 import { isCatalogId } from "@/lib/ids";
 
@@ -8,6 +9,7 @@ async function downloadResponse(
   version: string | null,
   count: boolean,
 ) {
+  if (isCatalogPaused()) return catalogPausedResponse();
   if (!isCatalogId(id)) {
     return Response.json({ error: "Invalid mod id." }, { status: 400 });
   }

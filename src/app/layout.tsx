@@ -4,6 +4,7 @@ import { Nunito, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { currentIsAdmin } from "@/lib/admin";
+import { isCatalogPaused } from "@/lib/catalog-pause";
 import { clerkAppearance, CLERK_TASK_URLS } from "@/lib/clerk-options";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -23,7 +24,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.spiritvalemods.com"),
   title: "SpiritVale Mods",
-  description: "Official catalog of SpiritVale mods and Mod Manager releases.",
+  description:
+    "SpiritVale Mods catalog — currently paused following SpiritVale’s policy on BepInEx and runtime injection.",
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -36,9 +38,14 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim();
   const isAdmin = publishableKey ? await currentIsAdmin() : false;
+  const catalogPaused = isCatalogPaused();
   const body = (
     <>
-      <SiteHeader clerkEnabled={Boolean(publishableKey)} isAdmin={isAdmin} />
+      <SiteHeader
+        clerkEnabled={Boolean(publishableKey)}
+        isAdmin={isAdmin}
+        catalogPaused={catalogPaused}
+      />
       <div className="flex-1">{children}</div>
       <SiteFooter />
     </>
@@ -55,8 +62,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             publishableKey={publishableKey}
             signInUrl="/sign-in"
             signUpUrl="/sign-up"
-            signInFallbackRedirectUrl="/upload"
-            signUpFallbackRedirectUrl="/upload"
+            signInFallbackRedirectUrl={catalogPaused ? "/" : "/upload"}
+            signUpFallbackRedirectUrl={catalogPaused ? "/" : "/upload"}
             afterSignOutUrl="/"
             taskUrls={CLERK_TASK_URLS}
             appearance={clerkAppearance}

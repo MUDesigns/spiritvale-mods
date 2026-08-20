@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { CatalogPauseNotice } from "@/components/catalog-pause-notice";
+import { isCatalogPaused } from "@/lib/catalog-pause";
 import { UploadForm } from "./upload-form";
 import { DISCORD_INVITE_URL } from "@/lib/discord";
 
@@ -8,6 +10,20 @@ export const dynamic = "force-dynamic";
 export default async function UploadPage() {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
+
+  if (isCatalogPaused()) {
+    return (
+      <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+        <div>
+          <h1 className="text-2xl font-extrabold">Uploads disabled</h1>
+          <p className="mt-2 text-sm text-[#9aa3b8]">
+            New community mods cannot be published while the catalog is paused.
+          </p>
+        </div>
+        <CatalogPauseNotice compact />
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">

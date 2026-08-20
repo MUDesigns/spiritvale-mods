@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { modImages } from "@/db/schema";
 import { IMAGE_CONTENT_TYPES, IMAGE_MAX_BYTES, MAX_IMAGES_PER_MOD } from "@/lib/constants";
 import { unauthorized } from "@/lib/auth";
+import { catalogPausedResponse, isCatalogPaused } from "@/lib/catalog-pause";
 import { hasClerk } from "@/lib/clerk";
 import { hasDatabase, requireModAccess } from "@/lib/catalog";
 import { isCatalogId, isImageFilename, sanitizeImagePathname } from "@/lib/ids";
@@ -18,6 +19,7 @@ type Payload = {
 };
 
 export async function POST(request: Request) {
+  if (isCatalogPaused()) return catalogPausedResponse();
   const { userId } = await auth();
   if (!userId) return unauthorized();
   if (!hasClerk() || !hasDatabase()) {

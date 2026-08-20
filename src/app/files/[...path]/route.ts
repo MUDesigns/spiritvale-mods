@@ -1,13 +1,21 @@
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
+import { catalogPausedResponse, isCatalogPaused } from "@/lib/catalog-pause";
 import { contentTypeFor, publicDiskPath } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+function isModZipPath(pathname: string): boolean {
+  return pathname.startsWith("mods/") && pathname.toLowerCase().endsWith(".zip");
+}
+
 async function fileResponse(pathParts: string[], download: boolean) {
   const pathname = pathParts.map((part) => decodeURIComponent(part)).join("/");
+  if (isCatalogPaused() && isModZipPath(pathname)) {
+    return catalogPausedResponse();
+  }
   const diskPath = publicDiskPath(pathname);
   if (!diskPath) {
     return new Response("Not found", { status: 404 });
@@ -46,6 +54,9 @@ export async function HEAD(
 ) {
   const { path } = await context.params;
   const pathname = path.map((part) => decodeURIComponent(part)).join("/");
+  if (isCatalogPaused() && isModZipPath(pathname)) {
+    return catalogPausedResponse();
+  }
   const diskPath = publicDiskPath(pathname);
   if (!diskPath) {
     return new Response("Not found", { status: 404 });

@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { COMMUNITY_MAX_BYTES } from "@/lib/constants";
 import { unauthorized } from "@/lib/auth";
+import { catalogPausedResponse, isCatalogPaused } from "@/lib/catalog-pause";
 import { hasClerk } from "@/lib/clerk";
 import { getModOwner, hasDatabase } from "@/lib/catalog";
 import { isCatalogId, isVersion, isZipFilename, sanitizeQuarantinePathname } from "@/lib/ids";
@@ -16,6 +17,7 @@ type Payload = {
 };
 
 export async function POST(request: Request) {
+  if (isCatalogPaused()) return catalogPausedResponse();
   const { userId } = await auth();
   if (!userId) return unauthorized();
   if (!hasClerk() || !hasDatabase()) {

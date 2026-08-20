@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CatalogPauseNotice } from "@/components/catalog-pause-notice";
 import { loadCatalog } from "@/lib/catalog";
+import { isCatalogPaused } from "@/lib/catalog-pause";
 import { catalogDisplayTitle } from "@/lib/format";
 import { isCatalogId } from "@/lib/ids";
 import { managerInstallUrl } from "@/lib/manager-protocol";
@@ -15,6 +17,18 @@ export default async function InstallPage({
 }) {
   const { id } = await params;
   if (!isCatalogId(id)) notFound();
+
+  if (isCatalogPaused()) {
+    return (
+      <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
+        <Link href="/" className="text-sm font-extrabold text-[#55b7ea]">
+          ← Back to home
+        </Link>
+        <CatalogPauseNotice compact />
+      </main>
+    );
+  }
+
   const catalog = await loadCatalog();
   const mod = catalog.mods[id];
   if (!mod) notFound();

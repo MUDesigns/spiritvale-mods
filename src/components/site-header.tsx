@@ -8,9 +8,11 @@ import { useEffect, useState } from "react";
 export function SiteHeader({
   clerkEnabled,
   isAdmin = false,
+  catalogPaused = false,
 }: {
   clerkEnabled: boolean;
   isAdmin?: boolean;
+  catalogPaused?: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -35,7 +37,7 @@ export function SiteHeader({
               SpiritVale
             </span>
             <span className="mt-1 block text-[0.72rem] font-bold tracking-[0.12em] text-[#9aa3b8] uppercase">
-              Mods catalog
+              {catalogPaused ? "Catalog paused" : "Mods catalog"}
             </span>
           </span>
         </Link>
@@ -50,7 +52,11 @@ export function SiteHeader({
             >
               {menuOpen ? "Close" : "Menu"}
             </button>
-            <AuthLinks isAdmin={isAdmin} open={menuOpen} />
+            <AuthLinks
+              isAdmin={isAdmin}
+              open={menuOpen}
+              catalogPaused={catalogPaused}
+            />
           </>
         ) : (
           <p className="max-w-[10rem] text-right text-xs text-[#9aa3b8]">
@@ -62,7 +68,15 @@ export function SiteHeader({
   );
 }
 
-function AuthLinks({ isAdmin, open }: { isAdmin: boolean; open: boolean }) {
+function AuthLinks({
+  isAdmin,
+  open,
+  catalogPaused,
+}: {
+  isAdmin: boolean;
+  open: boolean;
+  catalogPaused: boolean;
+}) {
   const { isSignedIn, isLoaded, user } = useUser();
   const { signOut } = useClerk();
   if (!isLoaded) {
@@ -77,9 +91,11 @@ function AuthLinks({ isAdmin, open }: { isAdmin: boolean; open: boolean }) {
       "Account";
     return (
       <div id="site-menu" className={`site-menu${open ? " is-open" : ""}`}>
-        <Link href="/upload" prefetch={false} className="btn btn-primary">
-          Upload
-        </Link>
+        {!catalogPaused ? (
+          <Link href="/upload" prefetch={false} className="btn btn-primary">
+            Upload
+          </Link>
+        ) : null}
         <Link href="/me" prefetch={false} className="site-menu-link">
           My mods
         </Link>
