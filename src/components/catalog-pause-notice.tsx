@@ -1,4 +1,3 @@
-import { DISCORD_INVITE_URL } from "@/lib/discord";
 import {
   CATALOG_PAUSE_INTRO,
   CATALOG_PAUSE_RULES_NOTE,
@@ -57,7 +56,10 @@ export function CatalogPauseNotice({ compact = false }: { compact?: boolean }) {
 
       {!compact ? (
         <div className="mt-5">
-          <a className="btn btn-primary" href={DISCORD_INVITE_URL}>
+          <a
+            className="btn btn-primary"
+            href="https://discord.com/channels/1257586742865956875/1375332037325492264/1540099251546357801"
+          >
             Open Discord
           </a>
         </div>
