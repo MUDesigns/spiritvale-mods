@@ -3,12 +3,18 @@ import path from "node:path";
 import { requirePublishToken } from "@/lib/auth";
 import { getDb } from "@/db";
 import { modImages, modVersions, mods } from "@/db/schema";
-import { deleteStoredBlob, storageRoot } from "@/lib/store";
+import {
+  deleteStoredBlob,
+  loadCatalogFromBlob,
+  saveCatalog,
+  storageRoot,
+} from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Destructive cutover helper: wipe all catalog mods (DB rows + blobs).
+ * Also clears catalog.json mods so seedFromBlobIfEmpty cannot restore them.
  * Does not touch app_release — re-publish Plugin Manager separately if needed.
  * Protected by PUBLISH_TOKEN only (same as trusted uploads).
  */
@@ -53,6 +59,10 @@ export async function POST(request: Request) {
   } catch {
     // continue
   }
+
+  // Prevent seedFromBlobIfEmpty from re-inserting BepInEx catalog.json entries.
+  const blob = await loadCatalogFromBlob();
+  await saveCatalog({ mods: {}, app: blob.app ?? null });
 
   return Response.json({
     ok: true,
