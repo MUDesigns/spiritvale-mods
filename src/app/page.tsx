@@ -1,4 +1,5 @@
-import { loadCatalog } from "@/lib/catalog";
+import { loadCatalog, queryPublicMods } from "@/lib/catalog";
+import { CatalogBrowser } from "@/components/catalog-browser";
 import { CatalogPauseNotice } from "@/components/catalog-pause-notice";
 import { formatBytes } from "@/lib/format";
 import { DISCORD_INVITE_URL } from "@/lib/discord";
@@ -10,6 +11,9 @@ export default async function Home() {
   const paused = isCatalogPaused();
   const catalog = paused ? null : await loadCatalog();
   const app = catalog?.app ?? null;
+  const initialMods = paused
+    ? null
+    : await queryPublicMods({ q: "", sort: "newest", page: 1, pageSize: 24 });
 
   return (
     <div className="min-h-full">
@@ -23,8 +27,8 @@ export default async function Home() {
           </h1>
           <p className="max-w-2xl text-[#9aa3b8]">
             {paused
-              ? "Community listings and uploads are offline while SpiritVale’s policy on BepInEx and runtime injection is in effect."
-              : "Download mods here and send them to SpiritVale Mod Manager with Install, or import zips yourself. Signed-in users can upload; they go live after a clean virus scan."}
+              ? "Community listings and uploads are temporarily offline."
+              : "External overlay plugins (listed as mods) for SpiritVale Plugin Manager. Install with the manager or download the zip. Passive overlays only — no game injection."}
           </p>
         </div>
       </header>
@@ -34,7 +38,11 @@ export default async function Home() {
 
         {!paused && app ? (
           <section className="panel p-4 sm:p-6">
-            <h2 className="text-xl font-extrabold">Mod Manager {app.version}</h2>
+            <h2 className="text-xl font-extrabold">Plugin Manager {app.version}</h2>
+            <p className="mt-2 text-sm text-[#9aa3b8]">
+              Passive Npcap overlay host. Does not inject into SpiritVale or use BepInEx.
+              Plugins are installed separately from this catalog.
+            </p>
             {app.changelog ? (
               <p className="mt-2 text-sm text-[#9aa3b8]">{app.changelog}</p>
             ) : null}
@@ -53,12 +61,14 @@ export default async function Home() {
           </section>
         ) : null}
 
+        {!paused && initialMods ? <CatalogBrowser initial={initialMods} /> : null}
+
         <section className="panel flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="max-w-2xl">
             <h2 className="text-xl font-extrabold">Join the Discord</h2>
             <p className="mt-2 text-sm text-[#9aa3b8]">
               {paused
-                ? "Read the SpiritVale rules and follow policy updates in Discord. This catalog will stay up with the official notice above."
+                ? "Read the SpiritVale rules and follow policy updates in Discord."
                 : "New versions, install problems, and WIP builds show up there before they settle into this catalog. Join, read the rules, and click Verify to unlock the rest of the server."}
             </p>
           </div>

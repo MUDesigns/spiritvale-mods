@@ -26,14 +26,17 @@ if (!publishToken) {
 const CATALOG_URL = (
   process.env.CATALOG_URL || "https://www.spiritvalemods.com"
 ).replace(/\/$/, "");
-const VERSION = "0.1.6";
+const VERSION = process.env.APP_VERSION || "0.3.0";
 const CHANGELOG =
-  "Click a catalog mod title to open its page, icon-only row actions, and Update All when catalog updates are available.";
+  process.env.APP_CHANGELOG ||
+  "SpiritVale Plugin Manager — passive overlay host with catalog install, zip import, and auto-update. Plugins are not bundled.";
 
 const INSTALLER =
-  "X:\\projects\\spiritvale-mod-manager\\src-tauri\\target\\release\\bundle\\nsis\\SpiritVale Mod Manager_0.1.6_x64-setup.exe";
+  process.env.APP_INSTALLER ||
+  `X:\\projects\\SpiritVale-Overlay\\dist\\SpiritVale Plugin Manager_${VERSION}_x64-setup.exe`;
 const PORTABLE =
-  "X:\\projects\\spiritvale-mod-manager\\src-tauri\\target\\release\\bundle\\portable\\SpiritValeModManager-portable.zip";
+  process.env.APP_PORTABLE ||
+  `X:\\projects\\SpiritVale-Overlay\\dist\\SpiritVale-Overlay-v${VERSION}-win-x64.zip`;
 
 const ARTIFACTS = [
   { artifact: "installer", file: INSTALLER, contentType: "application/octet-stream" },
@@ -41,6 +44,9 @@ const ARTIFACTS = [
 ];
 
 for (const item of ARTIFACTS) {
+  if (!existsSync(item.file)) {
+    throw new Error(`Missing ${item.artifact}: ${item.file}`);
+  }
   const bytes = await readFile(item.file);
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   const filename = path.basename(item.file);

@@ -15,9 +15,9 @@ export function InstallWithManagerButton({
         className ?? (compact ? "btn btn-secondary btn-compact" : "btn btn-primary")
       }
       href={managerInstallUrl(id)}
-      title="Opens SpiritVale Mod Manager and adds this zip to your library"
+      title="Opens SpiritVale Plugin Manager and installs this mod"
     >
-      {compact ? "Install" : "Install with Mod Manager"}
+      {compact ? "Install" : "Install with Plugin Manager"}
     </a>
   );
 }

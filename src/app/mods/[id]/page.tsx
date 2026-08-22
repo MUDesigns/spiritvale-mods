@@ -79,12 +79,13 @@ export default async function ModPage({
           <p className="mt-5 text-sm text-[#9aa3b8]">No description yet.</p>
         )}
         <p className="mt-4 text-xs text-[#9aa3b8]">
-          Install with Mod Manager requires{" "}
+          Install with Plugin Manager requires{" "}
           <a href="/" className="font-bold text-[#55b7ea] hover:underline">
-            SpiritVale Mod Manager 0.1.4 or later
+            SpiritVale Plugin Manager
           </a>
-          . Your browser will ask to open the app, then the zip is added to your
-          library.
+          . Your browser will ask to open the app, then the zip is installed into
+          your overlay plugins folder. You can also use Download zip and Import zip
+          in the manager.
         </p>
         <ModGallery images={mod.images} name={mod.name} />
       </section>
