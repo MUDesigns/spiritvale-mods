@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.spiritvalemods.com"),
   title: "SpiritVale Mods",
   description:
-    "SpiritVale Mods catalog — external overlay plugins for SpiritVale Plugin Manager (no game injection).",
+    "SpiritVale Mods catalog: external overlay plugins for SpiritVale Plugin Manager (no game injection).",
   icons: {
     icon: [
       { url: "/favicon.ico" },

@@ -835,6 +835,36 @@ export async function updateModMeta(
   return { ok: true };
 }
 
+/** PUBLISH_TOKEN path: edit listing text without a new version or Discord notify. */
+export async function updateModDescriptionAsPublisher(
+  id: string,
+  patch: { name?: string; description?: string },
+): Promise<OwnedModWriteResult> {
+  if (!hasDatabase()) {
+    const catalog = await loadCatalogFromBlob();
+    const mod = catalog.mods[id];
+    if (!mod) return { ok: false, error: "Mod not found.", status: 404 };
+    if (patch.name) mod.name = patch.name;
+    if (patch.description !== undefined) mod.description = patch.description || undefined;
+    await saveCatalogToBlob(catalog);
+    return { ok: true };
+  }
+
+  await ensureCatalog();
+  const db = getDb();
+  const [existing] = await db.select().from(mods).where(eq(mods.id, id)).limit(1);
+  if (!existing) return { ok: false, error: "Mod not found.", status: 404 };
+  await db
+    .update(mods)
+    .set({
+      ...(patch.name ? { name: patch.name } : {}),
+      ...(patch.description !== undefined ? { description: patch.description || null } : {}),
+      updatedAt: new Date(),
+    })
+    .where(eq(mods.id, id));
+  return { ok: true };
+}
+
 function publicImage(row: { id: string; url: string; filename: string }): CatalogModImage {
   return { id: row.id, url: row.url, filename: row.filename };
 }

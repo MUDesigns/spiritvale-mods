@@ -79,13 +79,21 @@ export default async function ModPage({
           <p className="mt-5 text-sm text-[#9aa3b8]">No description yet.</p>
         )}
         <p className="mt-4 text-xs text-[#9aa3b8]">
-          Install with Plugin Manager requires{" "}
+          These mods need{" "}
           <a href="/" className="font-bold text-[#55b7ea] hover:underline">
             SpiritVale Plugin Manager
-          </a>
-          . Your browser will ask to open the app, then the zip is installed into
-          your overlay plugins folder. You can also use Download zip and Import zip
-          in the manager.
+          </a>{" "}
+          and{" "}
+          <a
+            href="https://npcap.com/#download"
+            className="font-bold text-[#55b7ea] hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Npcap
+          </a>{" "}
+          (WinPcap API-compatible mode). Use Install with Plugin Manager, or Download zip
+          and Import zip in the manager Plugins tab.
         </p>
         <ModGallery images={mod.images} name={mod.name} />
       </section>
