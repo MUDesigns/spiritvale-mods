@@ -843,7 +843,7 @@ export async function updateModDescriptionAsPublisher(
   if (!hasDatabase()) {
     const catalog = await loadCatalogFromBlob();
     const mod = catalog.mods[id];
-    if (!mod) return { ok: false, error: "Mod not found.", status: 404 };
+    if (!mod) return { error: "Mod not found.", status: 404 };
     if (patch.name) mod.name = patch.name;
     if (patch.description !== undefined) mod.description = patch.description || undefined;
     await saveCatalogToBlob(catalog);
@@ -853,7 +853,7 @@ export async function updateModDescriptionAsPublisher(
   await ensureCatalog();
   const db = getDb();
   const [existing] = await db.select().from(mods).where(eq(mods.id, id)).limit(1);
-  if (!existing) return { ok: false, error: "Mod not found.", status: 404 };
+  if (!existing) return { error: "Mod not found.", status: 404 };
   await db
     .update(mods)
     .set({
