@@ -51,70 +51,8 @@ function artifactFrom(
 
 async function ensureCatalog(): Promise<void> {
   await ensureSchema();
-  await seedFromBlobIfEmpty();
-}
-
-async function seedFromBlobIfEmpty(): Promise<void> {
-  const db = getDb();
-  const [{ count }] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(mods);
-  if (count > 0) return;
-
-  const blob = await loadCatalogFromBlob();
-  for (const mod of Object.values(blob.mods)) {
-    await db.insert(mods).values({
-      id: mod.id,
-      name: mod.name,
-      description: mod.description || null,
-      ownerUserId: null,
-    });
-    const versions = (mod.versions ?? []).length
-      ? mod.versions
-      : [
-          {
-            version: mod.latestVersion,
-            changelog: mod.changelog,
-            filename: mod.filename,
-            sha256: mod.sha256,
-            sizeBytes: mod.sizeBytes,
-            downloadUrl: mod.downloadUrl,
-            publishedAt: mod.publishedAt,
-          },
-        ];
-    for (const entry of versions) {
-      await db.insert(modVersions).values({
-        modId: mod.id,
-        version: entry.version,
-        changelog: entry.changelog ?? null,
-        filename: entry.filename,
-        sha256: entry.sha256,
-        sizeBytes: entry.sizeBytes,
-        downloadUrl: entry.downloadUrl,
-        blobPath: `mods/${mod.id}/${entry.version}/${entry.filename}`,
-        status: "live",
-        publishedAt: new Date(entry.publishedAt),
-        uploaderUserId: null,
-      });
-    }
-  }
-
-  if (blob.app) {
-    await db.insert(appRelease).values({
-      id: 1,
-      version: blob.app.version,
-      changelog: blob.app.changelog ?? null,
-      publishedAt: new Date(blob.app.publishedAt),
-      installerFilename: blob.app.installer?.filename ?? null,
-      installerSha256: blob.app.installer?.sha256 ?? null,
-      installerSizeBytes: blob.app.installer?.sizeBytes ?? null,
-      installerDownloadUrl: blob.app.installer?.downloadUrl ?? null,
-      portableFilename: blob.app.portable?.filename ?? null,
-      portableSha256: blob.app.portable?.sha256 ?? null,
-      portableSizeBytes: blob.app.portable?.sizeBytes ?? null,
-      portableDownloadUrl: blob.app.portable?.downloadUrl ?? null,
-    });
-  }
+  // Do not reseed mods from catalog.json. That path resurrected deleted BepInEx
+  // entries after a wipe and caused Discord release spam.
 }
 
 async function loadCatalogFromDb(): Promise<Catalog> {
