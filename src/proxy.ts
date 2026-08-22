@@ -55,7 +55,10 @@ const clerkHandler = clerkMiddleware(
   async (auth, request) => {
     const redirected = apexToWww(request);
     if (redirected) return redirected;
-    if (request.nextUrl.pathname.startsWith("/api/v1")) {
+    if (
+      request.nextUrl.pathname.startsWith("/api/v1") ||
+      request.nextUrl.pathname.startsWith("/api/publish/")
+    ) {
       return NextResponse.next();
     }
     const { sessionStatus } = await auth();
