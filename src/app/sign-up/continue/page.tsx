@@ -53,7 +53,7 @@ export default function SignUpContinuePage() {
 
   if (!loaded) {
     return (
-      <main className="flex min-h-[50vh] items-center justify-center px-6 py-12 text-sm text-[#9aa3b8]">
+      <main className="flex min-h-[50vh] items-center justify-center px-6 py-12 text-sm text-[var(--muted)]">
         Loading…
       </main>
     );
@@ -63,7 +63,7 @@ export default function SignUpContinuePage() {
     <main className="flex min-h-[70vh] w-full items-center justify-center px-4 py-12 sm:px-6">
       <div className="panel w-full max-w-md p-5 sm:p-8">
         <h1 className="text-2xl font-extrabold text-[#f4f7fb]">Finish creating your account</h1>
-        <p className="mt-2 text-sm text-[#9aa3b8]">A couple more details and you’re in.</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">A couple more details and you’re in.</p>
         <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
           {needUsername ? (
             <label className="text-sm font-semibold text-[#f4f7fb]">
@@ -105,9 +105,9 @@ export default function SignUpContinuePage() {
             </label>
           ) : null}
           {!needUsername && !needFirstName && !needLastName ? (
-            <p className="text-sm text-[#9aa3b8]">
+            <p className="text-sm text-[var(--muted)]">
               This sign-up is no longer active.{" "}
-              <Link href="/sign-up" className="font-bold text-[#55b7ea]">
+              <Link href="/sign-up" className="font-bold text-[var(--blue)]">
                 Start again
               </Link>
               .

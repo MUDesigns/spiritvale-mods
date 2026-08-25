@@ -105,7 +105,7 @@ export function UploadForm({ discordInvite }: { discordInvite: string }) {
           placeholder="my-cool-mod"
           className="field"
         />
-        <span className="text-xs font-semibold text-[#9aa3b8]">
+        <span className="text-xs font-semibold text-[var(--muted)]">
           Lowercase letters, numbers, and hyphens. This is permanent for your mod.
         </span>
       </label>
@@ -131,17 +131,17 @@ export function UploadForm({ discordInvite }: { discordInvite: string }) {
         Zip file (max {formatBytes(COMMUNITY_MAX_BYTES)})
         <input required name="file" type="file" accept=".zip,application/zip" className="field" />
       </label>
-      <p className="text-xs font-semibold text-[#9aa3b8]">
+      <p className="text-xs font-semibold text-[var(--muted)]">
         Files are scanned with VirusTotal before they appear in the catalog. A
         clean result publishes automatically and is posted to{" "}
-        <a href={discordInvite} className="font-bold text-[#55b7ea] hover:underline">
+        <a href={discordInvite} className="font-bold text-[var(--blue)] hover:underline">
           Discord
         </a>
         . Detections, scan errors, or unsafe zips stay quarantined. Scanning is
         best-effort and not a substitute for desktop antivirus.
       </p>
       {error ? <p className="text-sm text-[#e07a6d]">{error}</p> : null}
-      {status ? <p className="text-sm text-[#55b7ea]">{status}</p> : null}
+      {status ? <p className="text-sm text-[var(--blue)]">{status}</p> : null}
       <button
         type="submit"
         disabled={busy || !user}

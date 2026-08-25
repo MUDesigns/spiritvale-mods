@@ -127,7 +127,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   return (
     <div className="panel w-full max-w-md p-5 sm:p-8">
       <h1 className="text-2xl font-extrabold text-[#f4f7fb]">{title}</h1>
-      <p className="mt-2 text-sm text-[#9aa3b8]">{subtitle}</p>
+      <p className="mt-2 text-sm text-[var(--muted)]">{subtitle}</p>
 
       {!verifying ? (
         <div className="mt-6 flex flex-col gap-3">
@@ -141,13 +141,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
       ) : null}
 
       {!verifying ? (
-        <div className="my-5 flex items-center gap-3 text-xs font-semibold tracking-wide text-[#9aa3b8] uppercase">
+        <div className="my-5 flex items-center gap-3 text-xs font-semibold tracking-wide text-[var(--muted)] uppercase">
           <span className="h-px flex-1 bg-white/10" />
           or email
           <span className="h-px flex-1 bg-white/10" />
         </div>
       ) : (
-        <p className="mt-6 text-sm text-[#9aa3b8]">Enter the code we sent to your email.</p>
+        <p className="mt-6 text-sm text-[var(--muted)]">Enter the code we sent to your email.</p>
       )}
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
@@ -222,18 +222,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
         </button>
       </form>
 
-      <p className="mt-6 text-sm text-[#9aa3b8]">
+      <p className="mt-6 text-sm text-[var(--muted)]">
         {mode === "sign-in" ? (
           <>
             Need an account?{" "}
-            <Link href="/sign-up" className="font-bold text-[#55b7ea]">
+            <Link href="/sign-up" className="font-bold text-[var(--blue)]">
               Sign up
             </Link>
           </>
         ) : (
           <>
             Already have an account?{" "}
-            <Link href="/sign-in" className="font-bold text-[#55b7ea]">
+            <Link href="/sign-in" className="font-bold text-[var(--blue)]">
               Sign in
             </Link>
           </>

@@ -83,7 +83,7 @@ export function AdminGrantPanel() {
   return (
     <section className="panel p-6">
       <h2 className="text-lg font-extrabold">Catalog admins</h2>
-      <p className="mt-1 text-sm text-[#9aa3b8]">
+      <p className="mt-1 text-sm text-[var(--muted)]">
         Anyone listed here can moderate every listing and approve quarantined
         uploads. Grant access by the email on their SpiritVale Mods account.
       </p>
@@ -96,7 +96,7 @@ export function AdminGrantPanel() {
           >
             <div>
               <p className="font-extrabold">{item}</p>
-              <p className="text-xs text-[#9aa3b8]">Built-in admin</p>
+              <p className="text-xs text-[var(--muted)]">Built-in admin</p>
             </div>
           </li>
         ))}
@@ -107,7 +107,7 @@ export function AdminGrantPanel() {
           >
             <div>
               <p className="font-extrabold">{row.email}</p>
-              <p className="text-xs text-[#9aa3b8]">Granted admin</p>
+              <p className="text-xs text-[var(--muted)]">Granted admin</p>
             </div>
             <button
               type="button"

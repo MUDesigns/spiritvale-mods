@@ -25,7 +25,7 @@ export function ModGallery({
 
   return (
     <div className="mt-6">
-      <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-[#9aa3b8]">
+      <h2 className="mb-3 text-sm font-extrabold uppercase tracking-wide text-[var(--muted)]">
         Screenshots
       </h2>
       <ul className="mod-gallery">

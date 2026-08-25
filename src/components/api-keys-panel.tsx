@@ -95,17 +95,17 @@ export function ApiKeysPanel() {
   return (
     <section className="panel p-6">
       <h2 className="text-lg font-extrabold">API keys</h2>
-      <p className="mt-1 text-sm text-[#9aa3b8]">
+      <p className="mt-1 text-sm text-[var(--muted)]">
         Use a key to upload mods from CI or local scripts. Treat it like a password.
         Docs and a Node example:{" "}
-        <a href={DEVKIT_URL} className="font-bold text-[#55b7ea] hover:underline">
+        <a href={DEVKIT_URL} className="font-bold text-[var(--blue)] hover:underline">
           spiritvale-mod-devkit
         </a>
         .
       </p>
 
       {createdKey ? (
-        <div className="mt-4 rounded-xl border border-[#55b7ea]/40 bg-[#12151f] p-4">
+        <div className="mt-4 rounded-xl border border-[var(--blue)]/40 bg-[var(--bg1-solid)] p-4">
           <p className="text-sm font-extrabold text-[#6ed6a0]">Copy this key now. It is shown once.</p>
           <code className="mt-2 block break-all font-mono text-sm text-[#f4f7fb]">{createdKey}</code>
           <button type="button" className="btn btn-secondary mt-3" onClick={() => void copyKey()}>
@@ -116,7 +116,7 @@ export function ApiKeysPanel() {
 
       <ul className="mt-4 flex flex-col gap-3">
         {keys.length === 0 ? (
-          <li className="text-sm text-[#9aa3b8]">No active keys.</li>
+          <li className="text-sm text-[var(--muted)]">No active keys.</li>
         ) : (
           keys.map((key) => (
             <li
@@ -125,8 +125,8 @@ export function ApiKeysPanel() {
             >
               <div>
                 <p className="font-extrabold">{key.name}</p>
-                <p className="font-mono text-sm text-[#9aa3b8]">{mask(key.last4)}</p>
-                <p className="text-xs text-[#9aa3b8]">
+                <p className="font-mono text-sm text-[var(--muted)]">{mask(key.last4)}</p>
+                <p className="text-xs text-[var(--muted)]">
                   Created {new Date(key.createdAt).toLocaleString()}
                   {key.lastUsedAt
                     ? ` · Last used ${new Date(key.lastUsedAt).toLocaleString()}`

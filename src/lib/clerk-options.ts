@@ -11,13 +11,13 @@ export const USERNAME_MAX = 64;
 
 export const clerkAppearance = {
   variables: {
-    colorPrimary: "#55b7ea",
-    colorBackground: "#1a1f2c",
-    colorForeground: "#f4f7fb",
-    colorMutedForeground: "#9aa3b8",
-    colorInputBackground: "#12151f",
-    colorInputForeground: "#f4f7fb",
-    colorNeutral: "#9aa3b8",
+    colorPrimary: "#d4a8ff",
+    colorBackground: "#12081c",
+    colorForeground: "#f6f1ff",
+    colorMutedForeground: "#b9a8d4",
+    colorInputBackground: "#050308",
+    colorInputForeground: "#f6f1ff",
+    colorNeutral: "#b9a8d4",
     borderRadius: "0.75rem",
   },
 };

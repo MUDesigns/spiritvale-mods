@@ -23,7 +23,7 @@ export default async function ModPage({
   if (isCatalogPaused()) {
     return (
       <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-        <Link href="/" className="text-sm font-extrabold text-[#55b7ea]">
+        <Link href="/" className="text-sm font-extrabold text-[var(--blue)]">
           ← Back to home
         </Link>
         <CatalogPauseNotice compact />
@@ -38,7 +38,7 @@ export default async function ModPage({
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <Link href="/mods" className="text-sm font-extrabold text-[#55b7ea]">
+      <Link href="/mods" className="text-sm font-extrabold text-[var(--blue)]">
         ← Back to catalog
       </Link>
       {viewed.hidden ? (
@@ -60,11 +60,11 @@ export default async function ModPage({
               />
             ) : null}
             <div className="min-w-0">
-              <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
+              <p className="font-mono text-xs text-[var(--muted)]">{mod.id}</p>
               <h1 className="mt-1 text-2xl font-extrabold sm:text-3xl">
                 {catalogDisplayTitle(mod.name, mod.filename)}
               </h1>
-              <p className="mt-2 text-sm text-[#9aa3b8]">
+              <p className="mt-2 text-sm text-[var(--muted)]">
                 {mod.author ? `${mod.author} · ` : ""}
                 v{mod.latestVersion} · {formatBytes(mod.sizeBytes)} ·{" "}
                 {formatDownloads(mod.downloadCount)} · Updated {formatDate(mod.publishedAt)}
@@ -83,12 +83,12 @@ export default async function ModPage({
             {mod.description}
           </p>
         ) : (
-          <p className="mt-5 text-sm text-[#9aa3b8]">No description yet.</p>
+          <p className="mt-5 text-sm text-[var(--muted)]">No description yet.</p>
         )}
         {!viewed.hidden ? (
-          <p className="mt-4 text-xs text-[#9aa3b8]">
+          <p className="mt-4 text-xs text-[var(--muted)]">
             Install with Plugin Manager requires{" "}
-            <a href="/" className="font-bold text-[#55b7ea] hover:underline">
+            <a href="/" className="font-bold text-[var(--blue)] hover:underline">
               SpiritVale Plugin Manager
             </a>
             . Your browser will ask to open the app, then the zip is added to your
@@ -129,7 +129,7 @@ export default async function ModPage({
                   </td>
                   <td data-label="Size">{formatBytes(entry.sizeBytes)}</td>
                   <td data-label="Published">{formatDate(entry.publishedAt)}</td>
-                  <td data-label="Changelog" className="max-w-xl text-sm text-[#9aa3b8]">
+                  <td data-label="Changelog" className="max-w-xl text-sm text-[var(--muted)]">
                     {entry.changelog || "—"}
                   </td>
                   <td>

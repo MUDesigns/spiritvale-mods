@@ -18,7 +18,7 @@ export function FeaturedMods({ mods }: { mods: PublicModSummary[] }) {
         <h2 className="text-xl font-extrabold">Top downloads</h2>
         <Link
           href="/mods"
-          className="text-sm font-extrabold text-[#55b7ea] hover:underline"
+          className="text-sm font-extrabold text-[var(--blue)] hover:underline"
         >
           View all →
         </Link>
@@ -45,22 +45,22 @@ function FeaturedLead({ mod }: { mod: PublicModSummary }) {
         )}
       </Link>
       <div className="flex flex-1 flex-col gap-3 p-4 sm:p-5">
-        <p className="text-xs font-extrabold tracking-[0.12em] text-[#f0c14a] uppercase">
+        <p className="text-xs font-extrabold tracking-[0.12em] text-[var(--gold)] uppercase">
           Most downloaded
         </p>
         <div className="min-w-0">
           <Link
             href={`/mods/${mod.id}`}
-            className="text-2xl font-extrabold tracking-tight hover:text-[#55b7ea]"
+            className="text-2xl font-extrabold tracking-tight hover:text-[var(--blue)]"
           >
             {title}
           </Link>
-          <p className="mt-1 text-sm text-[#9aa3b8]">
+          <p className="mt-1 text-sm text-[var(--muted)]">
             {formatDownloads(mod.downloadCount)} · v{mod.latestVersion}
           </p>
         </div>
         {mod.description ? (
-          <p className="text-sm leading-relaxed text-[#9aa3b8]">
+          <p className="text-sm leading-relaxed text-[var(--muted)]">
             {excerpt(mod.description, 180)}
           </p>
         ) : null}
@@ -89,15 +89,15 @@ function FeaturedSide({ mod }: { mod: PublicModSummary }) {
       <div className="min-w-0 flex-1">
         <Link
           href={`/mods/${mod.id}`}
-          className="font-extrabold hover:text-[#55b7ea]"
+          className="font-extrabold hover:text-[var(--blue)]"
         >
           {title}
         </Link>
-        <p className="mt-1 text-sm text-[#9aa3b8]">
+        <p className="mt-1 text-sm text-[var(--muted)]">
           {formatDownloads(mod.downloadCount)} · v{mod.latestVersion}
         </p>
         {mod.description ? (
-          <p className="mt-1 line-clamp-2 text-sm text-[#9aa3b8]">
+          <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
             {excerpt(mod.description, 90)}
           </p>
         ) : null}

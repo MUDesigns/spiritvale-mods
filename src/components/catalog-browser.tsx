@@ -81,7 +81,7 @@ export function CatalogBrowser({
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="section-title text-xl">Mods</h2>
-        <p className="rounded-full border border-[var(--line-strong)] bg-[rgba(20,24,34,0.85)] px-3 py-1 text-xs font-extrabold tracking-wide text-[#bfe8fb] uppercase">
+        <p className="rounded-full border border-[var(--line-strong)] bg-[rgba(18,8,28,0.85)] px-3 py-1 text-xs font-extrabold tracking-wide text-[var(--blue)] uppercase">
           {data.total} listed
         </p>
       </div>
@@ -125,7 +125,7 @@ export function CatalogBrowser({
           <p className="text-lg font-extrabold">
             {query.trim() ? "No matching mods" : "No mods in the catalog yet"}
           </p>
-          <p className="mt-2 text-sm text-[#9aa3b8]">
+          <p className="mt-2 text-sm text-[var(--muted)]">
             {query.trim()
               ? "Try a different search term."
               : "Sign in to upload a zip, or use SpiritVale Mod Publisher."}
@@ -182,7 +182,7 @@ export function CatalogBrowser({
         </>
       )}
 
-      <div className="catalog-pager text-sm text-[#9aa3b8]">
+      <div className="catalog-pager text-sm text-[var(--muted)]">
         <p>{busy ? "Updating…" : showing}</p>
         <div className="catalog-pager-buttons">
           <button
@@ -225,15 +225,15 @@ function ModIdentity({
         <span className="mod-thumb mod-thumb-empty" aria-hidden />
       )}
       <div className="min-w-0">
-        <Link href={`/mods/${mod.id}`} className="font-extrabold hover:text-[#55b7ea]">
+        <Link href={`/mods/${mod.id}`} className="font-extrabold hover:text-[var(--blue)]">
           {catalogDisplayTitle(mod.name, mod.filename)}
         </Link>
-        <p className="mt-0.5 font-mono text-xs text-[#9aa3b8]">
+        <p className="mt-0.5 font-mono text-xs text-[var(--muted)]">
           {mod.id}
           {mod.author ? ` · ${mod.author}` : ""}
         </p>
         {mod.description ? (
-          <p className="catalog-mod-excerpt mt-1 text-sm text-[#9aa3b8]">
+          <p className="catalog-mod-excerpt mt-1 text-sm text-[var(--muted)]">
             {excerpt(mod.description, excerptLength)}
           </p>
         ) : null}

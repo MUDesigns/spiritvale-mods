@@ -22,7 +22,7 @@ export default async function InstallPage({
   if (isCatalogPaused()) {
     return (
       <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-        <Link href="/" className="text-sm font-extrabold text-[#55b7ea]">
+        <Link href="/" className="text-sm font-extrabold text-[var(--blue)]">
           ← Back to home
         </Link>
         <CatalogPauseNotice compact />
@@ -40,7 +40,7 @@ export default async function InstallPage({
     <main className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-16 sm:px-6">
       <LaunchManager url={launchUrl} />
       <h1 className="text-2xl font-extrabold">Opening Mod Manager</h1>
-      <p className="text-[#9aa3b8]">
+      <p className="text-[var(--muted)]">
         Your browser should ask to open SpiritVale Mod Manager and install{" "}
         <strong className="text-[#f4f7fb]">{catalogDisplayTitle(mod.name, mod.filename)}</strong>
         .
@@ -53,9 +53,9 @@ export default async function InstallPage({
           Mod page
         </Link>
       </div>
-      <p className="text-xs text-[#9aa3b8]">
+      <p className="text-xs text-[var(--muted)]">
         Need the app first? Get SpiritVale Plugin Manager from the{" "}
-        <Link className="font-bold text-[#55b7ea] hover:underline" href="/">
+        <Link className="font-bold text-[var(--blue)] hover:underline" href="/">
           home page
         </Link>
         .

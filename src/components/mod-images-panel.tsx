@@ -139,14 +139,14 @@ export function ModImagesPanel({
           />
         </label>
       </div>
-      <p className="mt-1 text-xs text-[#9aa3b8]">
+      <p className="mt-1 text-xs text-[var(--muted)]">
         PNG, JPEG, WebP, or GIF · {formatBytes(IMAGE_MAX_BYTES)} max ·{" "}
         {list.images.length}/{MAX_IMAGES_PER_MOD}. The thumbnail appears next to
         the title in the catalog.
       </p>
       {error ? <p className="mt-2 text-sm text-[#e07a6d]">{error}</p> : null}
       {list.images.length === 0 ? (
-        <p className="mt-3 text-sm text-[#9aa3b8]">No screenshots yet.</p>
+        <p className="mt-3 text-sm text-[var(--muted)]">No screenshots yet.</p>
       ) : (
         <ul className="mod-image-editor mt-3">
           {list.images.map((image) => {

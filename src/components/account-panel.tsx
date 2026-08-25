@@ -41,10 +41,10 @@ export function AccountPanel() {
   }, [user]);
 
   if (!isLoaded) {
-    return <p className="text-sm text-[#9aa3b8]">Loading account…</p>;
+    return <p className="text-sm text-[var(--muted)]">Loading account…</p>;
   }
   if (!isSignedIn || !user) {
-    return <p className="text-sm text-[#9aa3b8]">Sign in to manage your account.</p>;
+    return <p className="text-sm text-[var(--muted)]">Sign in to manage your account.</p>;
   }
 
   const signedInUser = user;
@@ -135,7 +135,7 @@ export function AccountPanel() {
     <div className="flex flex-col gap-6">
       <section className="panel p-6">
         <h2 className="text-lg font-extrabold">Profile</h2>
-        <p className="mt-1 text-sm text-[#9aa3b8]">
+        <p className="mt-1 text-sm text-[var(--muted)]">
           {signedInUser.primaryEmailAddress?.emailAddress ?? "No email on this account"}
         </p>
         <form onSubmit={saveProfile} className="mt-4 flex flex-col gap-3">
@@ -186,7 +186,7 @@ export function AccountPanel() {
               />
             </label>
           ) : (
-            <p className="text-sm text-[#9aa3b8]">
+            <p className="text-sm text-[var(--muted)]">
               Add a password so you can also sign in with email.
             </p>
           )}
@@ -201,7 +201,7 @@ export function AccountPanel() {
               required
               autoComplete="new-password"
             />
-            <span className="mt-1 block text-xs font-semibold text-[#9aa3b8]">
+            <span className="mt-1 block text-xs font-semibold text-[var(--muted)]">
               At least 15 characters.
             </span>
           </label>
@@ -213,7 +213,7 @@ export function AccountPanel() {
 
       <section className="panel p-6">
         <h2 className="text-lg font-extrabold">Connected accounts</h2>
-        <p className="mt-1 text-sm text-[#9aa3b8]">
+        <p className="mt-1 text-sm text-[var(--muted)]">
           Connect Discord to get the Verified Modder role after you publish a live
           mod.
         </p>
@@ -231,7 +231,7 @@ export function AccountPanel() {
               >
                 <div>
                   <p className="font-extrabold">{provider.label}</p>
-                  <p className="text-sm text-[#9aa3b8]">
+                  <p className="text-sm text-[var(--muted)]">
                     {connected ? connected.emailAddress || "Connected" : "Not connected"}
                   </p>
                 </div>

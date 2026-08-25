@@ -22,7 +22,7 @@ export default async function MePage() {
   if (!hasDatabase()) {
     return (
       <main className="mx-auto max-w-6xl px-6 py-10">
-        <p className="text-[#9aa3b8]">Database is not configured yet.</p>
+        <p className="text-[var(--muted)]">Database is not configured yet.</p>
       </main>
     );
   }
@@ -35,7 +35,7 @@ export default async function MePage() {
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <div>
         <h1 className="text-2xl font-extrabold">My mods</h1>
-        <p className="mt-2 text-sm text-[#9aa3b8]">
+        <p className="mt-2 text-sm text-[var(--muted)]">
           {paused
             ? "The public catalog and new uploads are paused. Your private listings below are still visible to you only."
             : "Live files appear on the public catalog unless you hide them. Scanning and quarantined uploads are only visible here. You can hide/unhide a listing, edit its description, remove an older file, delete a listing, or add screenshots and pick a thumbnail."}
@@ -45,7 +45,7 @@ export default async function MePage() {
       {paused ? <CatalogPauseNotice compact /> : null}
 
       {owned.length === 0 && versions.length === 0 ? (
-        <p className="text-[#9aa3b8]">You have not uploaded any mods yet.</p>
+        <p className="text-[var(--muted)]">You have not uploaded any mods yet.</p>
       ) : null}
 
       {owned.map((mod) => {
@@ -69,7 +69,7 @@ export default async function MePage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/mods/${mod.id}`}
-                      className="text-xl font-extrabold hover:text-[#55b7ea]"
+                      className="text-xl font-extrabold hover:text-[var(--blue)]"
                     >
                       {mod.name}
                     </Link>
@@ -79,7 +79,7 @@ export default async function MePage() {
                       </span>
                     ) : null}
                   </div>
-                  <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
+                  <p className="font-mono text-xs text-[var(--muted)]">{mod.id}</p>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -122,17 +122,17 @@ export default async function MePage() {
                         remainingCount={rows.length}
                       />
                     </div>
-                    <p className="mt-1 text-sm text-[#9aa3b8]">
+                    <p className="mt-1 text-sm text-[var(--muted)]">
                       {formatBytes(row.sizeBytes)} · {formatDate(row.publishedAt)}
                     </p>
                     {row.changelog ? (
-                      <p className="mt-2 text-sm text-[#9aa3b8]">{row.changelog}</p>
+                      <p className="mt-2 text-sm text-[var(--muted)]">{row.changelog}</p>
                     ) : null}
                     {row.scanSummary ? (
-                      <p className="mt-2 text-sm text-[#9aa3b8]">{row.scanSummary}</p>
+                      <p className="mt-2 text-sm text-[var(--muted)]">{row.scanSummary}</p>
                     ) : null}
                     {row.status === "live" ? (
-                      <a className="mt-2 inline-block text-sm font-extrabold text-[#55b7ea]" href={row.downloadUrl}>
+                      <a className="mt-2 inline-block text-sm font-extrabold text-[var(--blue)]" href={row.downloadUrl}>
                         Download
                       </a>
                     ) : null}

@@ -86,7 +86,7 @@ export default function SsoCallbackPage() {
   }, [clerk, router, signIn, signUp]);
 
   return (
-    <main className="flex min-h-[50vh] items-center justify-center px-6 py-12 text-sm text-[#9aa3b8]">
+    <main className="flex min-h-[50vh] items-center justify-center px-6 py-12 text-sm text-[var(--muted)]">
       Completing sign in…
       <div id="clerk-captcha" />
     </main>

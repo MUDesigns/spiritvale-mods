@@ -12,7 +12,7 @@ export default async function AccountPage() {
     <main className="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <div>
         <h1 className="text-2xl font-extrabold">Account</h1>
-        <p className="mt-2 text-sm text-[#9aa3b8]">
+        <p className="mt-2 text-sm text-[var(--muted)]">
           Profile, password, connected accounts, and API keys for the catalog upload API.
         </p>
       </div>

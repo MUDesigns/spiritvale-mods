@@ -62,7 +62,7 @@ export function ModMetaForm({
           onChange={(event) => setNextDescription(event.target.value)}
           placeholder="What this mod does, like on Nexus."
         />
-        <span className="mt-1 block text-xs font-semibold text-[#9aa3b8]">
+        <span className="mt-1 block text-xs font-semibold text-[var(--muted)]">
           {nextDescription.length}/{DESCRIPTION_MAX}
         </span>
       </label>

@@ -19,15 +19,15 @@ export default async function ModsCatalogPage({
 
   return (
     <div className="min-h-full">
-      <header className="border-b border-[var(--line)] bg-[#171b28]">
+      <header className="border-b border-[var(--line)]">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 sm:px-6 sm:py-10">
-          <p className="text-sm font-extrabold tracking-[0.12em] text-[#55b7ea] uppercase">
+          <p className="text-sm font-extrabold tracking-[0.12em] text-[var(--blue)] uppercase">
             SpiritVale
           </p>
           <h1 className="text-3xl font-extrabold tracking-tight">
             {paused ? "Mods catalog paused" : "Mods catalog"}
           </h1>
-          <p className="max-w-2xl text-[#9aa3b8]">
+          <p className="max-w-2xl text-[var(--muted)]">
             {paused
               ? "Community listings and uploads are temporarily offline."
               : "External overlay plugins for SpiritVale Plugin Manager. Install with the manager or download the zip. Passive overlays only, no game injection."}
@@ -37,9 +37,9 @@ export default async function ModsCatalogPage({
       <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-10">
         {paused ? <CatalogPauseNotice /> : null}
         {!paused && catalog?.app ? (
-          <p className="text-sm text-[#9aa3b8]">
+          <p className="text-sm text-[var(--muted)]">
             Need the host first? Get Plugin Manager {catalog.app.version} from the{" "}
-            <a href="/" className="font-extrabold text-[#55b7ea] hover:underline">
+            <a href="/" className="font-extrabold text-[var(--blue)] hover:underline">
               home page
             </a>
             .

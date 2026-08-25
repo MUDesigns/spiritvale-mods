@@ -37,7 +37,7 @@ export function SiteHeader({
               <span className="block text-[1.2rem] leading-none font-extrabold tracking-[-0.02em] sm:text-[1.35rem]">
                 SpiritVale
               </span>
-              <span className="mt-1 block text-[0.72rem] font-bold tracking-[0.12em] text-[#9aa3b8] uppercase">
+              <span className="mt-1 block text-[0.72rem] font-bold tracking-[0.12em] text-[var(--muted)] uppercase">
                 {catalogPaused ? "Catalog paused" : "Mods catalog"}
               </span>
             </span>

@@ -38,7 +38,7 @@ export default async function AdminPage() {
   if (!hasDatabase()) {
     return (
       <main className="mx-auto max-w-6xl px-6 py-10">
-        <p className="text-[#9aa3b8]">Database is not configured yet.</p>
+        <p className="text-[var(--muted)]">Database is not configured yet.</p>
       </main>
     );
   }
@@ -54,7 +54,7 @@ export default async function AdminPage() {
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <div>
         <h1 className="text-2xl font-extrabold">Catalog admin</h1>
-        <p className="mt-2 text-sm text-[#9aa3b8]">
+        <p className="mt-2 text-sm text-[var(--muted)]">
           Approve or reject quarantined uploads, edit listings, hide mods from
           the public catalog, and delete any user&apos;s mods or files. Approving
           copies the zip to the public catalog even if VirusTotal or zip checks
@@ -67,7 +67,7 @@ export default async function AdminPage() {
       <section className="flex flex-col gap-3">
         <h2 className="section-title text-xl">Review queue</h2>
         {queue.length === 0 ? (
-          <p className="text-sm text-[#9aa3b8]">Nothing is scanning or quarantined.</p>
+          <p className="text-sm text-[var(--muted)]">Nothing is scanning or quarantined.</p>
         ) : (
           <ul className="flex flex-col gap-3">
             {queue.map((row) => {
@@ -80,12 +80,12 @@ export default async function AdminPage() {
                       <p className="font-extrabold">
                         {mod?.name ?? row.modId} · v{row.version}
                       </p>
-                      <p className="font-mono text-xs text-[#9aa3b8]">{row.modId}</p>
-                      <p className="mt-1 text-sm text-[#9aa3b8]">
+                      <p className="font-mono text-xs text-[var(--muted)]">{row.modId}</p>
+                      <p className="mt-1 text-sm text-[var(--muted)]">
                         {row.filename} · {formatBytes(row.sizeBytes)} ·{" "}
                         {formatDate(row.publishedAt)}
                       </p>
-                      <p className="mt-1 text-xs text-[#9aa3b8]">
+                      <p className="mt-1 text-xs text-[var(--muted)]">
                         Owner {ownerLabel(mod?.ownerUserId ?? row.uploaderUserId)}
                         {row.uploaderUserId && row.uploaderUserId !== mod?.ownerUserId
                           ? ` · Uploader ${row.uploaderUserId}`
@@ -95,7 +95,7 @@ export default async function AdminPage() {
                         {versionStatusLabel(row.status)}
                       </p>
                       {row.scanSummary ? (
-                        <p className="mt-2 whitespace-pre-wrap text-sm text-[#9aa3b8]">
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-[var(--muted)]">
                           {row.scanSummary}
                         </p>
                       ) : null}
@@ -127,7 +127,7 @@ export default async function AdminPage() {
       <section className="flex flex-col gap-4">
         <h2 className="section-title text-xl">All listings</h2>
         {mods.length === 0 ? (
-          <p className="text-sm text-[#9aa3b8]">No mods in the catalog database.</p>
+          <p className="text-sm text-[var(--muted)]">No mods in the catalog database.</p>
         ) : null}
         {mods.map((mod) => {
           const rows = versions.filter((row) => row.modId === mod.id);
@@ -150,7 +150,7 @@ export default async function AdminPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href={`/mods/${mod.id}`}
-                        className="text-xl font-extrabold hover:text-[#55b7ea]"
+                        className="text-xl font-extrabold hover:text-[var(--blue)]"
                       >
                         {mod.name}
                       </Link>
@@ -160,8 +160,8 @@ export default async function AdminPage() {
                         </span>
                       ) : null}
                     </div>
-                    <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
-                    <p className="mt-1 text-xs text-[#9aa3b8]">
+                    <p className="font-mono text-xs text-[var(--muted)]">{mod.id}</p>
+                    <p className="mt-1 text-xs text-[var(--muted)]">
                       Owner {ownerLabel(mod.ownerUserId)}
                     </p>
                   </div>
@@ -214,18 +214,18 @@ export default async function AdminPage() {
                           />
                         </div>
                       </div>
-                      <p className="mt-1 text-sm text-[#9aa3b8]">
+                      <p className="mt-1 text-sm text-[var(--muted)]">
                         {formatBytes(row.sizeBytes)} · {formatDate(row.publishedAt)}
                       </p>
                       {row.changelog ? (
-                        <p className="mt-2 text-sm text-[#9aa3b8]">{row.changelog}</p>
+                        <p className="mt-2 text-sm text-[var(--muted)]">{row.changelog}</p>
                       ) : null}
                       {row.scanSummary ? (
-                        <p className="mt-2 text-sm text-[#9aa3b8]">{row.scanSummary}</p>
+                        <p className="mt-2 text-sm text-[var(--muted)]">{row.scanSummary}</p>
                       ) : null}
                       {row.downloadUrl ? (
                         <a
-                          className="mt-2 inline-block text-sm font-extrabold text-[#55b7ea]"
+                          className="mt-2 inline-block text-sm font-extrabold text-[var(--blue)]"
                           href={row.downloadUrl}
                         >
                           Download
@@ -235,7 +235,7 @@ export default async function AdminPage() {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-4 text-sm text-[#9aa3b8]">No files on this listing.</p>
+                <p className="mt-4 text-sm text-[var(--muted)]">No files on this listing.</p>
               )}
             </section>
           );
