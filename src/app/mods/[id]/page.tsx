@@ -38,7 +38,7 @@ export default async function ModPage({
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      <Link href="/" className="text-sm font-extrabold text-[#55b7ea]">
+      <Link href="/mods" className="text-sm font-extrabold text-[#55b7ea]">
         ← Back to catalog
       </Link>
       {viewed.hidden ? (
@@ -87,9 +87,9 @@ export default async function ModPage({
         )}
         {!viewed.hidden ? (
           <p className="mt-4 text-xs text-[#9aa3b8]">
-            Install with Mod Manager requires{" "}
+            Install with Plugin Manager requires{" "}
             <a href="/" className="font-bold text-[#55b7ea] hover:underline">
-              SpiritVale Mod Manager 0.1.4 or later
+              SpiritVale Plugin Manager
             </a>
             . Your browser will ask to open the app, then the zip is added to your
             library.

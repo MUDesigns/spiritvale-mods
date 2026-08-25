@@ -54,9 +54,9 @@ export default async function InstallPage({
         </Link>
       </div>
       <p className="text-xs text-[#9aa3b8]">
-        Need the app first? Get SpiritVale Mod Manager from the{" "}
+        Need the app first? Get SpiritVale Plugin Manager from the{" "}
         <Link className="font-bold text-[#55b7ea] hover:underline" href="/">
-          catalog
+          home page
         </Link>
         .
       </p>

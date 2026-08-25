@@ -1,6 +1,6 @@
 import { loadCatalog, queryPublicMods } from "@/lib/catalog";
-import { CatalogBrowser } from "@/components/catalog-browser";
 import { CatalogPauseNotice } from "@/components/catalog-pause-notice";
+import { FeaturedMods } from "@/components/featured-mods";
 import { formatBytes } from "@/lib/format";
 import { DISCORD_INVITE_URL } from "@/lib/discord";
 import { isCatalogPaused } from "@/lib/catalog-pause";
@@ -8,14 +8,15 @@ import { isCatalogPaused } from "@/lib/catalog-pause";
 export const dynamic = "force-dynamic";
 
 const NPCAP_DOWNLOAD_URL = "https://npcap.com/#download";
+const PLUGIN_DEVKIT_URL = "https://github.com/MUDesigns/SpiritVale-Plugin-Devkit";
 
 export default async function Home() {
   const paused = isCatalogPaused();
   const catalog = paused ? null : await loadCatalog();
   const app = catalog?.app ?? null;
-  const initialMods = paused
+  const featured = paused
     ? null
-    : await queryPublicMods({ q: "", sort: "newest", page: 1, pageSize: 24 });
+    : await queryPublicMods({ q: "", sort: "downloads", page: 1, pageSize: 3 });
 
   return (
     <div className="min-h-full">
@@ -25,12 +26,12 @@ export default async function Home() {
             SpiritVale
           </p>
           <h1 className="text-3xl font-extrabold tracking-tight">
-            {paused ? "Mods catalog paused" : "Mods catalog"}
+            {paused ? "Mods catalog paused" : "SpiritVale Mods"}
           </h1>
           <p className="max-w-2xl text-[#9aa3b8]">
             {paused
               ? "Community listings and uploads are temporarily offline."
-              : "External overlay plugins (listed as mods) for SpiritVale Plugin Manager. Install with the manager or download the zip. Passive overlays only, no game injection."}
+              : "External overlay plugins for SpiritVale Plugin Manager. Install with the manager or download the zip. Passive overlays only, no game injection."}
           </p>
         </div>
       </header>
@@ -98,7 +99,25 @@ export default async function Home() {
           </a>
         </section>
 
-        {!paused && initialMods ? <CatalogBrowser initial={initialMods} /> : null}
+        <section className="panel flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div className="max-w-2xl">
+            <h2 className="text-xl font-extrabold">Make a plugin</h2>
+            <p className="mt-2 text-sm text-[#9aa3b8]">
+              HUD plugins are HTML/TypeScript web packs for Plugin Manager. The Devkit
+              has guides, a hello-world overlay, and a combat-feed example you can copy.
+            </p>
+          </div>
+          <a
+            className="btn btn-secondary shrink-0 self-start sm:self-center"
+            href={PLUGIN_DEVKIT_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open plugin Devkit
+          </a>
+        </section>
+
+        {!paused && featured ? <FeaturedMods mods={featured.mods} /> : null}
       </main>
     </div>
   );

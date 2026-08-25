@@ -24,23 +24,32 @@ export function SiteHeader({
   return (
     <nav className="site-header">
       <div className="site-header-inner">
-        <Link href="/" className="site-brand" onClick={() => setMenuOpen(false)}>
-          <img
-            src="/ui/icon-shop.png"
-            alt="SpiritVale"
-            width={42}
-            height={42}
-            className="drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]"
-          />
-          <span className="min-w-0">
-            <span className="block text-[1.2rem] leading-none font-extrabold tracking-[-0.02em] sm:text-[1.35rem]">
-              SpiritVale
+        <div className="site-header-start">
+          <Link href="/" className="site-brand" onClick={() => setMenuOpen(false)}>
+            <img
+              src="/ui/icon-shop.png"
+              alt="SpiritVale"
+              width={42}
+              height={42}
+              className="drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]"
+            />
+            <span className="min-w-0">
+              <span className="block text-[1.2rem] leading-none font-extrabold tracking-[-0.02em] sm:text-[1.35rem]">
+                SpiritVale
+              </span>
+              <span className="mt-1 block text-[0.72rem] font-bold tracking-[0.12em] text-[#9aa3b8] uppercase">
+                {catalogPaused ? "Catalog paused" : "Mods catalog"}
+              </span>
             </span>
-            <span className="mt-1 block text-[0.72rem] font-bold tracking-[0.12em] text-[#9aa3b8] uppercase">
-              {catalogPaused ? "Catalog paused" : "Mods catalog"}
-            </span>
-          </span>
-        </Link>
+          </Link>
+          <Link
+            href="/mods"
+            className={`site-nav-link${pathname === "/mods" || pathname.startsWith("/mods/") ? " is-active" : ""}`}
+            onClick={() => setMenuOpen(false)}
+          >
+            Mods
+          </Link>
+        </div>
         {clerkEnabled ? (
           <>
             <button
