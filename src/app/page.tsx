@@ -66,17 +66,15 @@ export default async function Home() {
         {paused ? <CatalogPauseNotice /> : null}
 
         {!paused && app ? (
-          <section className="panel home-feature">
-            <div className="home-feature-copy">
+          <section className="home-zigzag">
+            <div className="home-zigzag-copy">
               <p className="home-kicker">Get the host</p>
-              <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-                Plugin Manager {app.version}
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-[var(--muted)] sm:text-base">
+              <h2>Plugin Manager {app.version}</h2>
+              <p>
                 Passive overlay host for SpiritVale. It does not inject into the game or use
                 BepInEx. Catalog mods are installed separately after you set up the manager.
               </p>
-              <p className="mt-3 text-sm text-[var(--foreground)]">
+              <p>
                 <span className="font-extrabold text-[var(--gold)]">Required:</span>{" "}
                 <a
                   className="font-bold text-[var(--blue)] hover:underline"
@@ -89,10 +87,8 @@ export default async function Home() {
                 with WinPcap API-compatible mode enabled. Without Npcap, overlay mods cannot
                 read game traffic.
               </p>
-              {app.changelog ? (
-                <p className="mt-2 text-sm text-[var(--muted)]">{app.changelog}</p>
-              ) : null}
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              {app.changelog ? <p>{app.changelog}</p> : null}
+              <div className="home-zigzag-actions">
                 {app.portable ? (
                   <a className="btn btn-secondary" href={app.portable.downloadUrl}>
                     Portable zip ({formatBytes(app.portable.sizeBytes)})
@@ -143,41 +139,71 @@ export default async function Home() {
           </section>
         ) : null}
 
-        <div className="home-split">
-          <section className="panel flex flex-col gap-4 p-5 sm:p-6">
-            <div>
-              <p className="home-kicker">Community</p>
-              <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">Join the Discord</h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-                {paused
-                  ? "Read the SpiritVale rules and follow policy updates in Discord."
-                  : "Get Plugin Manager help, release notes, and overlay mod support. Join, read the rules, and click Verify to unlock the rest of the server."}
-              </p>
+        <section className="home-zigzag is-reverse">
+          <div className="home-zigzag-copy">
+            <p className="home-kicker">Community</p>
+            <h2>Join the Discord</h2>
+            <p>
+              {paused
+                ? "Read the SpiritVale rules and follow policy updates in Discord."
+                : "Get Plugin Manager help, release notes, and overlay mod support. Join, read the rules, and click Verify to unlock the rest of the server."}
+            </p>
+            <div className="home-zigzag-actions">
+              <a className="btn btn-primary" href={DISCORD_INVITE_URL}>
+                Join Discord
+              </a>
             </div>
-            <a className="btn btn-primary self-start" href={DISCORD_INVITE_URL}>
-              Join Discord
-            </a>
-          </section>
+          </div>
+          <ul className="home-points">
+            <li>
+              <strong>Help &amp; releases</strong>
+              Plugin Manager support and overlay mod notes.
+            </li>
+            <li>
+              <strong>Rules first</strong>
+              Join, read the rules, then Verify to unlock the rest.
+            </li>
+            <li>
+              <strong>WIP showcase</strong>
+              See what the community is building next.
+            </li>
+          </ul>
+        </section>
 
-          <section className="panel flex flex-col gap-4 p-5 sm:p-6">
-            <div>
-              <p className="home-kicker">Build</p>
-              <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">Make a plugin</h2>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-                HUD plugins are HTML/TypeScript web packs for Plugin Manager. The Devkit has
-                guides, a hello-world overlay, and a combat-feed example you can copy.
-              </p>
+        <section className="home-zigzag">
+          <div className="home-zigzag-copy">
+            <p className="home-kicker">Build</p>
+            <h2>Make a plugin</h2>
+            <p>
+              HUD plugins are HTML/TypeScript web packs for Plugin Manager. The Devkit has
+              guides, a hello-world overlay, and a combat-feed example you can copy.
+            </p>
+            <div className="home-zigzag-actions">
+              <a
+                className="btn btn-secondary"
+                href={PLUGIN_DEVKIT_URL}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Open plugin Devkit
+              </a>
             </div>
-            <a
-              className="btn btn-secondary self-start"
-              href={PLUGIN_DEVKIT_URL}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open plugin Devkit
-            </a>
-          </section>
-        </div>
+          </div>
+          <ul className="home-points">
+            <li>
+              <strong>Guides</strong>
+              Start with the Devkit docs for Plugin Manager HUDs.
+            </li>
+            <li>
+              <strong>Hello-world overlay</strong>
+              Copy a minimal pack and get a window on screen.
+            </li>
+            <li>
+              <strong>Combat-feed example</strong>
+              A working combat example you can adapt.
+            </li>
+          </ul>
+        </section>
 
         {!paused && featured ? <FeaturedMods mods={featured.mods} /> : null}
       </main>
