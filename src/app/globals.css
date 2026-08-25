@@ -236,7 +236,35 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
+  justify-content: space-between;
   gap: 12px;
+}
+
+.catalog-sorts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.catalog-sort {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: rgba(12, 6, 22, 0.45);
+  padding: 0.4em 0.95em;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.catalog-sort:hover,
+.catalog-sort.is-active {
+  border-color: transparent;
+  background: #f4eefe;
+  color: #16081f;
 }
 
 .catalog-toolbar-field {
@@ -263,44 +291,110 @@ body {
   padding: 0 0.8rem;
 }
 
-.catalog-cards {
+.catalog-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: 1rem;
   margin: 0;
   padding: 0;
   list-style: none;
+  grid-template-columns: 1fr;
 }
 
-.catalog-table-desktop {
-  display: none;
+.nexus-card {
+  display: flex;
+  min-width: 0;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(16, 8, 28, 0.72);
 }
 
-.catalog-card .catalog-mod-excerpt {
+.nexus-card-cover {
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: var(--bg1-solid);
+}
+
+.nexus-card-cover img,
+.nexus-card-cover .featured-cover-empty {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nexus-card-body {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.28rem;
+  padding: 0.85rem 0.9rem 0.7rem;
+}
+
+.nexus-card-title {
   display: -webkit-box;
   overflow: hidden;
-  white-space: normal;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.3;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
 }
 
-.catalog-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.85rem;
+.nexus-card-title:hover {
+  color: var(--blue);
+}
+
+.nexus-card-author,
+.nexus-card-meta {
   color: var(--muted);
   font-size: 0.75rem;
   font-weight: 700;
 }
 
-.catalog-card-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+.nexus-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
 }
 
-.catalog-card-actions .btn {
-  width: 100%;
-  margin: 0;
+.nexus-card-excerpt {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.nexus-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 0.85rem;
+  margin-top: auto;
+  padding: 0.55rem 0.9rem;
+  border-top: 1px solid var(--line);
+  background: rgba(5, 3, 8, 0.42);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.nexus-card-link {
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.nexus-card-link:hover {
+  text-decoration: underline;
 }
 
 .catalog-pager {
@@ -573,14 +667,24 @@ body {
 }
 
 @media (min-width: 768px) {
-  .catalog-cards {
-    display: none;
+  .catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
-  .catalog-table-desktop {
-    display: block;
+@media (min-width: 1024px) {
+  .catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
 
+@media (min-width: 1280px) {
+  .catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) {
   .nav-toggle {
     display: none;
   }

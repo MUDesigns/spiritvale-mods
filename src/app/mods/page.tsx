@@ -20,7 +20,7 @@ export default async function ModsCatalogPage({
   return (
     <div className="min-h-full">
       <header className="border-b border-[var(--line)]">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 sm:px-6 sm:py-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-8 sm:px-6 sm:py-10">
           <p className="text-sm font-extrabold tracking-[0.12em] text-[var(--blue)] uppercase">
             SpiritVale
           </p>
@@ -34,7 +34,7 @@ export default async function ModsCatalogPage({
           </p>
         </div>
       </header>
-      <main className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-10">
+      <main className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-10">
         {paused ? <CatalogPauseNotice /> : null}
         {!paused && catalog?.app ? (
           <p className="text-sm text-[var(--muted)]">

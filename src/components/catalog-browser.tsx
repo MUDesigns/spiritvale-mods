@@ -6,15 +6,16 @@ import {
   catalogDisplayTitle,
   excerpt,
   formatBytes,
-  formatDownloads,
+  formatCompactCount,
   formatDate,
+  formatRelativeTime,
 } from "@/lib/format";
 import type { CatalogSort, PublicModPage, PublicModSummary } from "@/lib/types";
 import { InstallWithManagerButton } from "@/components/install-with-manager";
 
 const SORTS: { value: CatalogSort; label: string }[] = [
-  { value: "newest", label: "Newest" },
-  { value: "downloads", label: "Most downloaded" },
+  { value: "newest", label: "New" },
+  { value: "downloads", label: "Popular" },
   { value: "name", label: "Name" },
   { value: "oldest", label: "Oldest" },
   { value: "size", label: "Largest" },
@@ -79,31 +80,23 @@ export function CatalogBrowser({
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="section-title text-xl">Mods</h2>
-        <p className="rounded-full border border-[var(--line-strong)] bg-[rgba(18,8,28,0.85)] px-3 py-1 text-xs font-extrabold tracking-wide text-[var(--blue)] uppercase">
-          {data.total} listed
-        </p>
-      </div>
-
       <div className="catalog-toolbar">
-        <label className="catalog-toolbar-field">
-          Sort
-          <select
-            className="field"
-            value={sort}
-            onChange={(event) => {
-              setSort(event.target.value as CatalogSort);
-              setPage(1);
-            }}
-          >
-            {SORTS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="catalog-sorts" role="group" aria-label="Sort mods">
+          {SORTS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={sort === option.value}
+              className={`catalog-sort${sort === option.value ? " is-active" : ""}`}
+              onClick={() => {
+                setSort(option.value);
+                setPage(1);
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
         <label className="catalog-toolbar-field">
           Per page
           <select
@@ -114,8 +107,9 @@ export function CatalogBrowser({
               setPage(1);
             }}
           >
-            <option value={20}>20</option>
-            <option value={50}>50</option>
+            <option value="20">20</option>
+            <option value="24">24</option>
+            <option value="50">50</option>
           </select>
         </label>
       </div>
@@ -132,54 +126,13 @@ export function CatalogBrowser({
           </p>
         </div>
       ) : (
-        <>
-          <ul className="catalog-cards">
-            {data.mods.map((mod) => (
-              <li key={mod.id}>
-                <CatalogModCard mod={mod} />
-              </li>
-            ))}
-          </ul>
-          <div className="table-wrap catalog-table-desktop">
-            <table className="catalog-table">
-              <thead>
-                <tr>
-                  <th>Mod</th>
-                  <th className="whitespace-nowrap catalog-col-meta">Version</th>
-                  <th className="whitespace-nowrap catalog-col-downloads">Downloads</th>
-                  <th className="whitespace-nowrap catalog-col-meta">Size</th>
-                  <th className="hidden whitespace-nowrap lg:table-cell catalog-col-meta">
-                    Updated
-                  </th>
-                  <th className="catalog-actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.mods.map((mod) => (
-                  <tr key={mod.id} className="catalog-row">
-                    <td>
-                      <ModIdentity mod={mod} excerptLength={90} />
-                    </td>
-                    <td className="whitespace-nowrap">v{mod.latestVersion}</td>
-                    <td className="whitespace-nowrap">{formatDownloads(mod.downloadCount)}</td>
-                    <td className="whitespace-nowrap">{formatBytes(mod.sizeBytes)}</td>
-                    <td className="hidden whitespace-nowrap lg:table-cell">
-                      {formatDate(mod.publishedAt)}
-                    </td>
-                    <td className="catalog-actions">
-                      <div className="catalog-actions-inner">
-                        <InstallWithManagerButton id={mod.id} compact />
-                        <a className="btn btn-secondary btn-compact" href={mod.downloadUrl}>
-                          Download
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
+        <ul className="catalog-grid">
+          {data.mods.map((mod) => (
+            <li key={mod.id}>
+              <CatalogModCard mod={mod} />
+            </li>
+          ))}
+        </ul>
       )}
 
       <div className="catalog-pager text-sm text-[var(--muted)]">
@@ -210,52 +163,39 @@ export function CatalogBrowser({
   );
 }
 
-function ModIdentity({
-  mod,
-  excerptLength,
-}: {
-  mod: PublicModSummary;
-  excerptLength: number;
-}) {
+function CatalogModCard({ mod }: { mod: PublicModSummary }) {
+  const title = catalogDisplayTitle(mod.name, mod.filename);
   return (
-    <div className="catalog-mod-cell">
-      {mod.thumbnailUrl ? (
-        <img className="mod-thumb" src={mod.thumbnailUrl} alt="" width={40} height={40} />
-      ) : (
-        <span className="mod-thumb mod-thumb-empty" aria-hidden />
-      )}
-      <div className="min-w-0">
-        <Link href={`/mods/${mod.id}`} className="font-extrabold hover:text-[var(--blue)]">
-          {catalogDisplayTitle(mod.name, mod.filename)}
+    <article className="nexus-card">
+      <Link href={`/mods/${mod.id}`} className="nexus-card-cover">
+        {mod.thumbnailUrl ? (
+          <img src={mod.thumbnailUrl} alt="" />
+        ) : (
+          <span className="featured-cover-empty" aria-hidden />
+        )}
+      </Link>
+      <div className="nexus-card-body">
+        <Link href={`/mods/${mod.id}`} className="nexus-card-title">
+          {title}
         </Link>
-        <p className="mt-0.5 font-mono text-xs text-[var(--muted)]">
-          {mod.id}
-          {mod.author ? ` · ${mod.author}` : ""}
+        <p className="nexus-card-author">{mod.author || "Unknown author"}</p>
+        <p className="nexus-card-meta">
+          <span>v{mod.latestVersion}</span>
+          <span>{formatRelativeTime(mod.publishedAt)}</span>
+          <span>{formatDate(mod.publishedAt)}</span>
         </p>
         {mod.description ? (
-          <p className="catalog-mod-excerpt mt-1 text-sm text-[var(--muted)]">
-            {excerpt(mod.description, excerptLength)}
-          </p>
+          <p className="nexus-card-excerpt">{excerpt(mod.description, 140)}</p>
         ) : null}
       </div>
-    </div>
-  );
-}
-
-function CatalogModCard({ mod }: { mod: PublicModSummary }) {
-  return (
-    <article className="catalog-card">
-      <ModIdentity mod={mod} excerptLength={140} />
-      <p className="catalog-card-meta">
-        <span>v{mod.latestVersion}</span>
-        <span>{formatDownloads(mod.downloadCount)}</span>
+      <div className="nexus-card-footer">
+        <span title={`${formatCompactCount(mod.downloadCount)} downloads`}>
+          {formatCompactCount(mod.downloadCount)} dl
+        </span>
         <span>{formatBytes(mod.sizeBytes)}</span>
-        <span>{formatDate(mod.publishedAt)}</span>
-      </p>
-      <div className="catalog-card-actions">
-        <InstallWithManagerButton id={mod.id} compact />
-        <a className="btn btn-secondary btn-compact" href={mod.downloadUrl}>
-          Download
+        <InstallWithManagerButton id={mod.id} compact className="nexus-card-link" />
+        <a className="nexus-card-link" href={mod.downloadUrl}>
+          Zip
         </a>
       </div>
     </article>

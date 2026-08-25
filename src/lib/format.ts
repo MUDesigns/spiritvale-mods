@@ -23,6 +23,27 @@ export function formatDownloads(value: number): string {
   return `${formatCount(count)} ${count === 1 ? "download" : "downloads"}`;
 }
 
+export function formatCompactCount(value: number): string {
+  const count = Math.max(0, Math.round(value));
+  if (count < 1000) return String(count);
+  if (count < 10_000) return `${(count / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  if (count < 1_000_000) return `${Math.round(count / 1000)}k`;
+  return `${(count / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+}
+
+export function formatRelativeTime(value: string | Date): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  const days = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000));
+  if (days < 1) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 30) return `${days} days ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return months === 1 ? "1 month ago" : `${months} months ago`;
+  const years = Math.floor(days / 365);
+  return years === 1 ? "1 year ago" : `${years} years ago`;
+}
+
 export function versionStatusLabel(status: string): string {
   if (status === "live") return "Live";
   if (status === "scanning") return "Scanning";
