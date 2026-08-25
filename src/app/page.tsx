@@ -55,16 +55,8 @@ export default async function Home() {
               >
                 Npcap
               </a>{" "}
-              with WinPcap API-compatible mode enabled, plus the{" "}
-              <a
-                className="font-bold text-[#55b7ea] hover:underline"
-                href="https://dotnet.microsoft.com/download/dotnet/8.0"
-                target="_blank"
-                rel="noreferrer"
-              >
-                .NET 8 Desktop Runtime
-              </a>{" "}
-              (x64). Without Npcap, overlay mods cannot read game traffic.
+              with WinPcap API-compatible mode enabled. Without Npcap, overlay
+              mods cannot read game traffic.
             </p>
             {app.changelog ? (
               <p className="mt-2 text-sm text-[#9aa3b8]">{app.changelog}</p>

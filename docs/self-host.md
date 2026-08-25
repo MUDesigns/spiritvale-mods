@@ -106,7 +106,7 @@ Schedule: `0 6 * * *`. Nightly, also snapshot Postgres and tarball `/data/storag
 3. Wait for Traefik certificates. Confirm `/`, `/api/app`, and sign-in on **www**.
 4. Remove the Vercel project domain alias so it cannot steal the hostname.
 
-Clerk already allows both apex and www. Existing Mod Manager installs that use `https://www.spiritvalemods.com` do not need a rebuild.
+Clerk already allows both apex and www. Existing Plugin Manager installs that use `https://www.spiritvalemods.com` do not need a rebuild.
 
 ## 8. Clerk production
 
