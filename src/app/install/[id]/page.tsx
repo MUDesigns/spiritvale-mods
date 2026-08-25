@@ -39,15 +39,15 @@ export default async function InstallPage({
   return (
     <main className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-16 sm:px-6">
       <LaunchManager url={launchUrl} />
-      <h1 className="text-2xl font-extrabold">Opening Mod Manager</h1>
+      <h1 className="text-2xl font-extrabold">Opening Plugin Manager</h1>
       <p className="text-[var(--muted)]">
-        Your browser should ask to open SpiritVale Mod Manager and install{" "}
+        Your browser should ask to open SpiritVale Plugin Manager and install{" "}
         <strong className="text-[#f4f7fb]">{catalogDisplayTitle(mod.name, mod.filename)}</strong>
         .
       </p>
       <div className="flex flex-wrap gap-2">
         <a className="btn btn-primary" href={launchUrl}>
-          Launch Mod Manager
+          Launch Plugin Manager
         </a>
         <Link className="btn btn-secondary" href={`/mods/${id}`}>
           Mod page
