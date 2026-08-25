@@ -20,8 +20,14 @@ const SORTS: { value: CatalogSort; label: string }[] = [
   { value: "size", label: "Largest" },
 ];
 
-export function CatalogBrowser({ initial }: { initial: PublicModPage }) {
-  const [query, setQuery] = useState("");
+export function CatalogBrowser({
+  initial,
+  initialQuery = "",
+}: {
+  initial: PublicModPage;
+  initialQuery?: string;
+}) {
+  const query = initialQuery;
   const [sort, setSort] = useState<CatalogSort>("newest");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(initial.pageSize);
@@ -29,6 +35,11 @@ export function CatalogBrowser({ initial }: { initial: PublicModPage }) {
   const [busy, setBusy] = useState(false);
 
   const skipFirst = useRef(true);
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setPage(1);
+  }
 
   const pageCount = Math.max(1, Math.ceil(data.total / data.pageSize));
   const showing = useMemo(() => {
@@ -76,20 +87,6 @@ export function CatalogBrowser({ initial }: { initial: PublicModPage }) {
       </div>
 
       <div className="catalog-toolbar">
-        <label className="catalog-toolbar-field search">
-          Search
-          <span className="search-field">
-            <img src="/ui/icon-search.png" alt="" width={16} height={16} />
-            <input
-              placeholder="Search mods…"
-              value={query}
-              onChange={(event) => {
-                setQuery(event.target.value);
-                setPage(1);
-              }}
-            />
-          </span>
-        </label>
         <label className="catalog-toolbar-field">
           Sort
           <select

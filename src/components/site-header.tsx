@@ -2,8 +2,8 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
 
 export function SiteHeader({
   clerkEnabled,
@@ -49,26 +49,37 @@ export function SiteHeader({
           >
             Mods
           </Link>
+          {!catalogPaused ? (
+            <Link
+              href="/upload"
+              prefetch={false}
+              className={`site-nav-link${pathname === "/upload" ? " is-active" : ""}`}
+              onClick={() => setMenuOpen(false)}
+            >
+              Upload
+            </Link>
+          ) : null}
         </div>
         {clerkEnabled ? (
-          <>
-            <button
-              type="button"
-              className="nav-toggle"
-              aria-expanded={menuOpen}
-              aria-controls="site-menu"
-              onClick={() => setMenuOpen((open) => !open)}
-            >
-              {menuOpen ? "Close" : "Menu"}
-            </button>
-            <AuthLinks
-              isAdmin={isAdmin}
-              open={menuOpen}
-              catalogPaused={catalogPaused}
-            />
-          </>
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-expanded={menuOpen}
+            aria-controls="site-menu"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? "Close" : "Menu"}
+          </button>
+        ) : null}
+        {catalogPaused ? null : (
+          <Suspense fallback={<div className="site-header-search" />}>
+            <ModsSearch />
+          </Suspense>
+        )}
+        {clerkEnabled ? (
+          <AuthLinks isAdmin={isAdmin} open={menuOpen} />
         ) : (
-          <p className="max-w-[10rem] text-right text-xs text-[#9aa3b8]">
+          <p className="site-header-notice">
             Sign in coming online shortly
           </p>
         )}
@@ -77,19 +88,54 @@ export function SiteHeader({
   );
 }
 
-function AuthLinks({
-  isAdmin,
-  open,
-  catalogPaused,
-}: {
-  isAdmin: boolean;
-  open: boolean;
-  catalogPaused: boolean;
-}) {
+function ModsSearch() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlQuery = pathname === "/mods" ? (searchParams.get("q") ?? "") : "";
+  const [value, setValue] = useState(urlQuery);
+  const onCatalog = pathname === "/mods";
+
+  useEffect(() => {
+    setValue(urlQuery);
+  }, [urlQuery]);
+
+  useEffect(() => {
+    if (!onCatalog) return;
+    const handle = window.setTimeout(() => {
+      const next = value.trim();
+      const current = urlQuery.trim();
+      if (next === current) return;
+      const href = next ? `/mods?q=${encodeURIComponent(next)}` : "/mods";
+      router.replace(href, { scroll: false });
+    }, 200);
+    return () => window.clearTimeout(handle);
+  }, [onCatalog, router, urlQuery, value]);
+
+  return (
+    <form className="site-header-search" action="/mods" method="get" role="search">
+      <label className="sr-only" htmlFor="site-mod-search">
+        Search mods
+      </label>
+      <span className="search-field">
+        <img src="/ui/icon-search.png" alt="" width={16} height={16} />
+        <input
+          id="site-mod-search"
+          name="q"
+          placeholder="Search mods…"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+        />
+      </span>
+    </form>
+  );
+}
+
+function AuthLinks({ isAdmin, open }: { isAdmin: boolean; open: boolean }) {
   const { isSignedIn, isLoaded, user } = useUser();
   const { signOut } = useClerk();
   if (!isLoaded) {
-    return <div className="hidden h-8 w-24 md:block" />;
+    return <div className="site-header-end hidden h-8 w-24 md:flex" />;
   }
   if (isSignedIn) {
     const label =
@@ -97,43 +143,103 @@ function AuthLinks({
         user.unsafeMetadata.displayName) ||
       user.username ||
       user.primaryEmailAddress?.emailAddress ||
-      "Account";
+      "Profile";
     return (
-      <div id="site-menu" className={`site-menu${open ? " is-open" : ""}`}>
-        {!catalogPaused ? (
-          <Link href="/upload" prefetch={false} className="btn btn-primary">
-            Upload
-          </Link>
-        ) : null}
-        <Link href="/me" prefetch={false} className="site-menu-link">
-          My mods
-        </Link>
-        {isAdmin ? (
-          <Link href="/admin" prefetch={false} className="site-menu-link site-menu-link-admin">
-            Admin
-          </Link>
-        ) : null}
-        <Link href="/account" prefetch={false} className="site-menu-link site-menu-link-account">
-          {label}
-        </Link>
+      <div id="site-menu" className={`site-header-end site-menu${open ? " is-open" : ""}`}>
         <button
           type="button"
-          className="btn btn-secondary"
+          className="site-nav-link site-nav-text"
           onClick={() => signOut({ redirectUrl: "/" })}
         >
           Sign out
         </button>
+        <ProfileMenu label={label} isAdmin={isAdmin} />
       </div>
     );
   }
   return (
-    <div className="site-menu-auth">
-      <Link href="/sign-in" className="btn btn-secondary">
+    <div id="site-menu" className={`site-header-end site-menu${open ? " is-open" : ""}`}>
+      <Link href="/sign-in" className="site-nav-link">
         Sign in
       </Link>
-      <Link href="/sign-up" className="btn btn-primary">
+      <Link href="/sign-up" className="site-nav-link">
         Sign up
       </Link>
+    </div>
+  );
+}
+
+function ProfileMenu({ label, isAdmin }: { label: string; isAdmin: boolean }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="site-nav-dropdown" ref={wrapRef}>
+      <button
+        type="button"
+        className={`site-nav-link site-nav-text${open ? " is-active" : ""}`}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={label === "Profile" ? "Profile" : `Profile, ${label}`}
+        onClick={() => setOpen((value) => !value)}
+      >
+        Profile
+        <span className="site-nav-caret" aria-hidden="true" />
+      </button>
+      {open ? (
+        <div className="site-nav-dropdown-menu" role="menu">
+          <Link
+            href="/account"
+            prefetch={false}
+            role="menuitem"
+            className="site-nav-dropdown-item"
+            onClick={() => setOpen(false)}
+          >
+            Account
+          </Link>
+          <Link
+            href="/me"
+            prefetch={false}
+            role="menuitem"
+            className="site-nav-dropdown-item"
+            onClick={() => setOpen(false)}
+          >
+            My Uploads
+          </Link>
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              prefetch={false}
+              role="menuitem"
+              className="site-nav-dropdown-item site-nav-dropdown-item-admin"
+              onClick={() => setOpen(false)}
+            >
+              Admin
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

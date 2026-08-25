@@ -5,12 +5,17 @@ import { isCatalogPaused } from "@/lib/catalog-pause";
 
 export const dynamic = "force-dynamic";
 
-export default async function ModsCatalogPage() {
+export default async function ModsCatalogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   const paused = isCatalogPaused();
+  const { q = "" } = await searchParams;
   const catalog = paused ? null : await loadCatalog();
   const initialMods = paused
     ? null
-    : await queryPublicMods({ q: "", sort: "newest", page: 1, pageSize: 24 });
+    : await queryPublicMods({ q, sort: "newest", page: 1, pageSize: 24 });
 
   return (
     <div className="min-h-full">
@@ -40,7 +45,9 @@ export default async function ModsCatalogPage() {
             .
           </p>
         ) : null}
-        {!paused && initialMods ? <CatalogBrowser initial={initialMods} /> : null}
+        {!paused && initialMods ? (
+          <CatalogBrowser initial={initialMods} initialQuery={q} />
+        ) : null}
       </main>
     </div>
   );
