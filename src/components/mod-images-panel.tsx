@@ -1,13 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { putCatalogFile, requestCatalogUpload } from "@/lib/browser-upload";
+import { uploadModScreenshot } from "@/lib/browser-upload";
 import {
   IMAGE_MAX_BYTES,
   MAX_IMAGES_PER_MOD,
 } from "@/lib/constants";
 import { formatBytes } from "@/lib/format";
-import { isImageFilename, safeFilename } from "@/lib/ids";
 import type { CatalogModImage, ModImageList } from "@/lib/types";
 
 export function ModImagesPanel({
@@ -45,40 +44,9 @@ export function ModImagesPanel({
     try {
       let nextList = list;
       for (const file of Array.from(files).slice(0, remaining)) {
-        const filename = safeFilename(file.name);
-        if (!filename || !isImageFilename(filename)) {
-          throw new Error("Screenshots must be PNG, JPEG, WebP, or GIF.");
-        }
-        if (file.size > IMAGE_MAX_BYTES) {
-          throw new Error(`Each image must be ${formatBytes(IMAGE_MAX_BYTES)} or smaller.`);
-        }
-        const pathname = `mods/${id}/images/${crypto.randomUUID()}/${filename}`;
-        const token = await requestCatalogUpload("/api/community/image-upload-token", {
-          pathname,
-          id,
-          contentType: file.type || "application/octet-stream",
+        nextList = await uploadModScreenshot(id, file, {
+          setThumbnail: nextList.images.length === 0 && !nextList.thumbnailImageId,
         });
-        const blob = await putCatalogFile(token, file, file.type || "application/octet-stream");
-        const response = await fetch(`/api/community/mods/${id}/images`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            pathname,
-            filename,
-            sizeBytes: file.size,
-            downloadUrl: blob.downloadUrl || blob.url,
-            url: blob.url,
-            setThumbnail: nextList.images.length === 0 && !nextList.thumbnailImageId,
-          }),
-        });
-        const json = (await response.json()) as ModImageList & { error?: string };
-        if (!response.ok) {
-          throw new Error(json.error ?? "Could not save the screenshot.");
-        }
-        nextList = {
-          thumbnailImageId: json.thumbnailImageId ?? null,
-          images: json.images ?? [],
-        };
         setList(nextList);
       }
     } catch (err) {

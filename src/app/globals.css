@@ -932,6 +932,52 @@ body {
   font-weight: 800;
 }
 
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.upload-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.upload-shots-drop {
+  display: flex;
+  min-height: 11rem;
+  cursor: pointer;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: rgba(12, 6, 22, 0.45);
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.upload-shots-drop:hover,
+.upload-shots-drop:focus-within {
+  border-color: var(--blue);
+}
+
+@media (min-width: 768px) {
+  .upload-grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    align-items: start;
+    column-gap: 0;
+    row-gap: 1.5rem;
+  }
+
+  .upload-col + .upload-col {
+    border-left: 1px solid var(--line);
+    padding-left: 2rem;
+    margin-left: 2rem;
+  }
+}
+
 .home-page {
   position: relative;
 }
