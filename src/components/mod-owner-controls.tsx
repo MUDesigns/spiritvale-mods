@@ -156,6 +156,59 @@ export function ApproveVersionButton({
   );
 }
 
+export function HideModButton({
+  id,
+  name,
+  hidden,
+}: {
+  id: string;
+  name: string;
+  hidden: boolean;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onToggle() {
+    const nextHidden = !hidden;
+    const confirmed = window.confirm(
+      nextHidden
+        ? `Hide "${name}" from the public catalog? You and admins can still see it here and unhide it later.`
+        : `Show "${name}" on the public catalog again?`,
+    );
+    if (!confirmed) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/community/mods/${id}/visibility`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ hidden: nextHidden }),
+      });
+      const json = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(json.error ?? "Could not update visibility.");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update visibility.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        className="btn btn-secondary"
+        disabled={busy}
+        onClick={() => void onToggle()}
+      >
+        {busy ? "Saving…" : hidden ? "Unhide" : "Hide from catalog"}
+      </button>
+      {error ? <p className="text-xs text-[#e07a6d]">{error}</p> : null}
+    </div>
+  );
+}
+
 export function RetryScanButton({
   id,
   version,

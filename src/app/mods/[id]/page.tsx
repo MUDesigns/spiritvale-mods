@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { CatalogPauseNotice } from "@/components/catalog-pause-notice";
-import { loadCatalog } from "@/lib/catalog";
+import { loadModForViewer } from "@/lib/catalog";
 import { isCatalogPaused } from "@/lib/catalog-pause";
 import { catalogDisplayTitle, formatBytes, formatDate, formatDownloads } from "@/lib/format";
 import { InstallWithManagerButton } from "@/components/install-with-manager";
@@ -30,16 +31,22 @@ export default async function ModPage({
     );
   }
 
-  const catalog = await loadCatalog();
-  const raw = catalog.mods[id];
-  if (!raw) notFound();
-  const mod = publicMod(raw);
+  const { userId } = await auth();
+  const viewed = await loadModForViewer(id, userId);
+  if (!viewed) notFound();
+  const mod = publicMod(viewed.mod);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-10">
       <Link href="/" className="text-sm font-extrabold text-[#55b7ea]">
         ← Back to catalog
       </Link>
+      {viewed.hidden ? (
+        <p className="rounded-xl border border-[#c9a227]/40 bg-[rgba(40,32,12,0.55)] px-4 py-3 text-sm text-[#e6c35c]">
+          This listing is hidden from the public catalog. Only you and catalog
+          admins can open it.
+        </p>
+      ) : null}
       <section className="panel p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div className="flex min-w-0 items-start gap-3">
@@ -65,7 +72,7 @@ export default async function ModPage({
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
-            <InstallWithManagerButton id={mod.id} />
+            {!viewed.hidden ? <InstallWithManagerButton id={mod.id} /> : null}
             <a className="btn btn-secondary" href={mod.downloadUrl}>
               Download zip
             </a>
@@ -78,23 +85,16 @@ export default async function ModPage({
         ) : (
           <p className="mt-5 text-sm text-[#9aa3b8]">No description yet.</p>
         )}
-        <p className="mt-4 text-xs text-[#9aa3b8]">
-          These mods need{" "}
-          <a href="/" className="font-bold text-[#55b7ea] hover:underline">
-            SpiritVale Plugin Manager
-          </a>{" "}
-          and{" "}
-          <a
-            href="https://npcap.com/#download"
-            className="font-bold text-[#55b7ea] hover:underline"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Npcap
-          </a>{" "}
-          (WinPcap API-compatible mode). Use Install with Plugin Manager, or Download zip
-          and Import zip in the manager Plugins tab.
-        </p>
+        {!viewed.hidden ? (
+          <p className="mt-4 text-xs text-[#9aa3b8]">
+            Install with Mod Manager requires{" "}
+            <a href="/" className="font-bold text-[#55b7ea] hover:underline">
+              SpiritVale Mod Manager 0.1.4 or later
+            </a>
+            . Your browser will ask to open the app, then the zip is added to your
+            library.
+          </p>
+        ) : null}
         <ModGallery images={mod.images} name={mod.name} />
       </section>
 

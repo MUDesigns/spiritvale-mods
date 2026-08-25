@@ -1,5 +1,6 @@
 import {
   bigint,
+  boolean,
   index,
   integer,
   pgTable,
@@ -15,6 +16,7 @@ export const mods = pgTable("mods", {
   ownerUserId: text("owner_user_id"),
   thumbnailImageId: text("thumbnail_image_id"),
   downloadCount: integer("download_count").notNull().default(0),
+  hidden: boolean("hidden").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

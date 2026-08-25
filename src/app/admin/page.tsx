@@ -9,6 +9,7 @@ import {
   ApproveVersionButton,
   DeleteModButton,
   DeleteVersionButton,
+  HideModButton,
   RetryScanButton,
 } from "@/components/mod-owner-controls";
 import { hasDatabase, listAdminCatalog, listImagesByModIds } from "@/lib/catalog";
@@ -54,10 +55,10 @@ export default async function AdminPage() {
       <div>
         <h1 className="text-2xl font-extrabold">Catalog admin</h1>
         <p className="mt-2 text-sm text-[#9aa3b8]">
-          Approve or reject quarantined uploads, edit listings, and delete any
-          user&apos;s mods or files. Approving copies the zip to the public
-          catalog even if VirusTotal or zip checks failed. Grant other people
-          admin with the panel below.
+          Approve or reject quarantined uploads, edit listings, hide mods from
+          the public catalog, and delete any user&apos;s mods or files. Approving
+          copies the zip to the public catalog even if VirusTotal or zip checks
+          failed. Grant other people admin with the panel below.
         </p>
       </div>
 
@@ -146,19 +147,29 @@ export default async function AdminPage() {
                     <img className="mod-thumb" src={thumbUrl} alt="" width={40} height={40} />
                   ) : null}
                   <div>
-                    <Link
-                      href={`/mods/${mod.id}`}
-                      className="text-xl font-extrabold hover:text-[#55b7ea]"
-                    >
-                      {mod.name}
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={`/mods/${mod.id}`}
+                        className="text-xl font-extrabold hover:text-[#55b7ea]"
+                      >
+                        {mod.name}
+                      </Link>
+                      {mod.hidden ? (
+                        <span className="rounded-full border border-[#c9a227]/40 bg-[rgba(40,32,12,0.55)] px-2 py-0.5 text-[0.68rem] font-extrabold tracking-wide text-[#e6c35c] uppercase">
+                          Hidden
+                        </span>
+                      ) : null}
+                    </div>
                     <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
                     <p className="mt-1 text-xs text-[#9aa3b8]">
                       Owner {ownerLabel(mod.ownerUserId)}
                     </p>
                   </div>
                 </div>
-                <DeleteModButton id={mod.id} name={mod.name} />
+                <div className="flex flex-wrap items-center gap-2">
+                  <HideModButton id={mod.id} name={mod.name} hidden={Boolean(mod.hidden)} />
+                  <DeleteModButton id={mod.id} name={mod.name} />
+                </div>
               </div>
               <ModMetaForm
                 id={mod.id}

@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { CatalogPauseNotice } from "@/components/catalog-pause-notice";
 import { ModImagesPanel } from "@/components/mod-images-panel";
 import { ModMetaForm } from "@/components/mod-meta-form";
-import { DeleteModButton, DeleteVersionButton } from "@/components/mod-owner-controls";
+import { DeleteModButton, DeleteVersionButton, HideModButton } from "@/components/mod-owner-controls";
 import { isCatalogPaused } from "@/lib/catalog-pause";
 import { hasDatabase, listImagesByModIds, listUserMods } from "@/lib/catalog";
 import {
@@ -38,7 +38,7 @@ export default async function MePage() {
         <p className="mt-2 text-sm text-[#9aa3b8]">
           {paused
             ? "The public catalog and new uploads are paused. Your private listings below are still visible to you only."
-            : "Live files appear on the public catalog. Scanning and quarantined uploads are only visible here. You can edit the Nexus-style description, remove an older file, delete a listing you uploaded, or add screenshots and pick a thumbnail."}
+            : "Live files appear on the public catalog unless you hide them. Scanning and quarantined uploads are only visible here. You can hide/unhide a listing, edit its description, remove an older file, delete a listing, or add screenshots and pick a thumbnail."}
         </p>
       </div>
 
@@ -66,12 +66,19 @@ export default async function MePage() {
                   <img className="mod-thumb" src={thumbUrl} alt="" width={40} height={40} />
                 ) : null}
                 <div>
-                  <Link
-                    href={`/mods/${mod.id}`}
-                    className="text-xl font-extrabold hover:text-[#55b7ea]"
-                  >
-                    {mod.name}
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/mods/${mod.id}`}
+                      className="text-xl font-extrabold hover:text-[#55b7ea]"
+                    >
+                      {mod.name}
+                    </Link>
+                    {mod.hidden ? (
+                      <span className="rounded-full border border-[#c9a227]/40 bg-[rgba(40,32,12,0.55)] px-2 py-0.5 text-[0.68rem] font-extrabold tracking-wide text-[#e6c35c] uppercase">
+                        Hidden
+                      </span>
+                    ) : null}
+                  </div>
                   <p className="font-mono text-xs text-[#9aa3b8]">{mod.id}</p>
                 </div>
               </div>
@@ -81,6 +88,7 @@ export default async function MePage() {
                     Upload new version
                   </Link>
                 ) : null}
+                <HideModButton id={mod.id} name={mod.name} hidden={Boolean(mod.hidden)} />
                 <DeleteModButton id={mod.id} name={mod.name} />
               </div>
             </div>

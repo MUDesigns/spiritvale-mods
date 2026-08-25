@@ -84,6 +84,7 @@ async function loadCatalogFromDb(): Promise<Catalog> {
 
   const catalogMods: Record<string, CatalogMod> = {};
   for (const mod of modRows) {
+    if (mod.hidden) continue;
     const history = (versionsByMod.get(mod.id) ?? []).slice(0, MAX_VERSIONS_PER_MOD);
     const latest = history[0];
     if (!latest) continue;
@@ -146,6 +147,98 @@ async function loadCatalogFromDb(): Promise<Catalog> {
     : null;
 
   return { mods: catalogMods, app };
+}
+
+async function catalogModFromRows(
+  mod: typeof mods.$inferSelect,
+  versionRows: Array<typeof modVersions.$inferSelect>,
+  imageRows: Array<typeof modImages.$inferSelect>,
+  author?: string,
+): Promise<CatalogMod | null> {
+  const history = versionRows
+    .filter((row) => row.modId === mod.id && row.status === "live")
+    .sort((a, b) => asIso(b.publishedAt).localeCompare(asIso(a.publishedAt)))
+    .slice(0, MAX_VERSIONS_PER_MOD);
+  const latest = history[0];
+  if (!latest) return null;
+  const images = imageRows
+    .filter((row) => row.modId === mod.id)
+    .map((row) => ({ id: row.id, url: row.url, filename: row.filename }));
+  const thumbnailUrl =
+    images.find((image) => image.id === mod.thumbnailImageId)?.url ?? images[0]?.url;
+  return {
+    id: mod.id,
+    name: mod.name,
+    description: mod.description ?? undefined,
+    latestVersion: latest.version,
+    changelog: latest.changelog ?? undefined,
+    filename: latest.filename,
+    sha256: latest.sha256,
+    sizeBytes: latest.sizeBytes,
+    downloadUrl: latest.downloadUrl,
+    publishedAt: asIso(latest.publishedAt),
+    downloadCount: mod.downloadCount ?? 0,
+    thumbnailUrl,
+    author,
+    images,
+    versions: history.map((item) => ({
+      version: item.version,
+      changelog: item.changelog ?? undefined,
+      filename: item.filename,
+      sha256: item.sha256,
+      sizeBytes: item.sizeBytes,
+      downloadUrl: item.downloadUrl,
+      publishedAt: asIso(item.publishedAt),
+    })),
+  };
+}
+
+/** Public catalog entry, or a hidden listing when the viewer is the owner/admin. */
+export async function loadModForViewer(
+  id: string,
+  userId: string | null,
+): Promise<{ mod: CatalogMod; hidden: boolean } | null> {
+  if (!hasDatabase()) {
+    const catalog = await loadCatalogFromBlob();
+    const mod = catalog.mods[id];
+    return mod ? { mod, hidden: false } : null;
+  }
+  await ensureCatalog();
+  const db = getDb();
+  const [modRow] = await db.select().from(mods).where(eq(mods.id, id)).limit(1);
+  if (!modRow) return null;
+
+  const hidden = Boolean(modRow.hidden);
+  if (hidden) {
+    const allowed =
+      Boolean(userId) &&
+      (modRow.ownerUserId === userId || (await isCatalogAdmin(userId!)));
+    if (!allowed) return null;
+  }
+
+  const [versionRows, imageRows] = await Promise.all([
+    db
+      .select()
+      .from(modVersions)
+      .where(and(eq(modVersions.modId, id), eq(modVersions.status, "live")))
+      .orderBy(desc(modVersions.publishedAt)),
+    db
+      .select()
+      .from(modImages)
+      .where(eq(modImages.modId, id))
+      .orderBy(asc(modImages.sortOrder), asc(modImages.createdAt)),
+  ]);
+  const authors = modRow.ownerUserId
+    ? await authorNamesByUserId([modRow.ownerUserId])
+    : new Map<string, string>();
+  const mod = await catalogModFromRows(
+    modRow,
+    versionRows,
+    imageRows,
+    modRow.ownerUserId ? authors.get(modRow.ownerUserId) : undefined,
+  );
+  if (!mod) return null;
+  return { mod, hidden };
 }
 
 export async function loadCatalog(): Promise<Catalog> {
@@ -576,6 +669,14 @@ export async function resolveModDownload(
 
   await ensureCatalog();
   const db = getDb();
+  const [modRow] = await db
+    .select({ hidden: mods.hidden })
+    .from(mods)
+    .where(eq(mods.id, id))
+    .limit(1);
+  if (!modRow) return { error: "Mod not found.", status: 404 };
+  if (modRow.hidden) return { error: "Mod not found.", status: 404 };
+
   const requested = version?.trim() || "";
   if (requested && !isVersion(requested)) {
     return { error: "Invalid version.", status: 400 };
@@ -749,7 +850,8 @@ export async function queryPublicMods(input: {
           i.created_at ASC
         LIMIT 1
       ) ti ON true
-      WHERE $1 = '' OR m.name ILIKE $2 OR m.id ILIKE $2 OR COALESCE(m.description, '') ILIKE $2
+      WHERE COALESCE(m.hidden, false) = false
+        AND ($1 = '' OR m.name ILIKE $2 OR m.id ILIKE $2 OR COALESCE(m.description, '') ILIKE $2)
     )
     SELECT *, COUNT(*) OVER()::int AS total
     FROM filtered
@@ -831,6 +933,32 @@ export async function updateModMeta(
       ...(patch.description !== undefined ? { description: patch.description || null } : {}),
       updatedAt: new Date(),
     })
+    .where(eq(mods.id, id));
+  return { ok: true };
+}
+
+export async function isModHidden(id: string): Promise<boolean> {
+  if (!hasDatabase()) return false;
+  await ensureCatalog();
+  const db = getDb();
+  const [row] = await db
+    .select({ hidden: mods.hidden })
+    .from(mods)
+    .where(eq(mods.id, id))
+    .limit(1);
+  return Boolean(row?.hidden);
+}
+
+export async function setModHidden(
+  id: string,
+  userId: string,
+  hidden: boolean,
+): Promise<OwnedModWriteResult> {
+  const owned = await requireModAccess(id, userId);
+  if (!owned.ok) return owned;
+  await owned.db
+    .update(mods)
+    .set({ hidden, updatedAt: new Date() })
     .where(eq(mods.id, id));
   return { ok: true };
 }
